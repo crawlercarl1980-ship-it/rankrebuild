@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { createSupabaseAdmin } from '@/lib/supabase';
 import { testConnection, getSEOPlugin } from '@/lib/wordpress';
+import { getPlanLimits, getEffectivePlan } from '@/lib/subscription';
+
+const DEMO_SITE_URL = 'https://demo.rankrebuild.com';
 
 async function getUserId(): Promise<string | null> {
   try {
@@ -35,6 +38,35 @@ export async function POST(req: Request) {
   const { name, url, wp_username, app_password } = await req.json();
   if (!name || !url || !wp_username || !app_password) {
     return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+  }
+
+  // Skip plan limit check for demo site
+  const isDemoSite = url.trim().replace(/\/$/, '') === DEMO_SITE_URL;
+
+  if (!isDemoSite) {
+    // Fetch subscription and enforce site limit
+    const admin = createSupabaseAdmin();
+    const { data: subscriptionData } = await admin
+      .from('subscriptions')
+      .select('plan, status')
+      .eq('user_id', userId)
+      .single();
+
+    const limits = getPlanLimits(getEffectivePlan(subscriptionData ?? null));
+
+    const { count: siteCount } = await admin
+      .from('sites')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    const existingSites = siteCount ?? 0;
+
+    if (existingSites >= limits.maxSites) {
+      return NextResponse.json(
+        { error: 'Plan limit reached. Upgrade to add more sites.' },
+        { status: 400 }
+      );
+    }
   }
 
   // Test connection before saving

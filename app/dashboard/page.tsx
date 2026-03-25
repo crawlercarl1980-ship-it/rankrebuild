@@ -6,26 +6,15 @@ import SiteCard from '@/components/SiteCard';
 import ConnectSiteModal from '@/components/ConnectSiteModal';
 import SignOutButton from '@/components/SignOutButton';
 import Link from 'next/link';
+import { getEffectivePlan, getPlanLimits } from '@/lib/subscription';
 
 interface Subscription {
   id: string;
   plan: 'basic' | 'pro' | 'trial';
   status: 'active' | 'canceled' | 'past_due' | 'trialing';
   current_period_end?: string;
+  trial_ends_at?: string;
 }
-
-const PLAN_LABELS: Record<string, string> = {
-  basic: 'Basic',
-  pro: 'Pro',
-  trial: 'Trial',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-900/50 text-green-400',
-  trialing: 'bg-teal-900/50 text-teal-400',
-  past_due: 'bg-amber-900/50 text-amber-400',
-  canceled: 'bg-red-900/50 text-red-400',
-};
 
 export default function DashboardPage() {
   const [sites, setSites] = useState<Site[]>([]);
@@ -82,7 +71,36 @@ export default function DashboardPage() {
     return `${Math.floor(hrs / 24)}d ago`;
   }
 
-  const hasActiveSubscription = subscription && (subscription.status === 'active' || subscription.status === 'trialing');
+  function getDaysLeft(dateStr?: string): number {
+    if (!dateStr) return 0;
+    const diff = new Date(dateStr).getTime() - Date.now();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  // Compute plan info
+  const effectivePlan = subscription !== undefined ? getEffectivePlan(subscription ?? null) : null;
+  const limits = effectivePlan ? getPlanLimits(effectivePlan) : null;
+  const isActive = subscription && (subscription.status === 'active' || subscription.status === 'trialing');
+  const isTrialing = subscription?.status === 'trialing';
+  const isBad = !subscription || subscription.status === 'canceled' || subscription.status === 'past_due';
+  const daysLeft = isTrialing ? getDaysLeft(subscription?.trial_ends_at) : 0;
+  const trialExpiringSoon = isTrialing && daysLeft <= 3;
+
+  // Plan badge
+  function getPlanBadge() {
+    if (!subscription || effectivePlan === null) return null;
+    if (effectivePlan === 'pro') {
+      return <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-900/50 text-green-400">✓ Pro Plan</span>;
+    }
+    if (effectivePlan === 'basic') {
+      return <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-900/50 text-green-400">✓ Basic Plan</span>;
+    }
+    if (effectivePlan === 'trial') {
+      const color = daysLeft <= 3 ? 'bg-amber-900/50 text-amber-400' : 'bg-teal-900/50 text-teal-400';
+      return <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${color}`}>Trial — {daysLeft} day{daysLeft !== 1 ? 's' : ''} left</span>;
+    }
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -90,13 +108,14 @@ export default function DashboardPage() {
       <header className="border-b border-slate-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="font-black text-xl">Rank<span className="text-teal-400">Rebuild</span></div>
-          {subscription && hasActiveSubscription && (
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[subscription.status] || 'bg-slate-800 text-slate-300'}`}>
-              {PLAN_LABELS[subscription.plan] || subscription.plan} Plan
-            </span>
-          )}
+          {getPlanBadge()}
         </div>
         <div className="flex items-center gap-3">
+          {limits && (
+            <span className="text-xs text-slate-400 hidden sm:inline">
+              {sites.length} / {limits.maxSites === Infinity ? '∞' : limits.maxSites} site{limits.maxSites !== 1 ? 's' : ''} used
+            </span>
+          )}
           <SignOutButton />
           <button
             onClick={() => setShowModal(true)}
@@ -106,12 +125,28 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Free trial / no subscription banner */}
-      {subscription === null && (
+      {/* Upgrade Required banner — show only when no active sub or trial expiring soon */}
+      {(isBad && subscription !== undefined) && (
+        <div className="bg-red-900/30 border-b border-red-700/50 px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-red-300 text-sm">
+            <span>🔒</span>
+            <span>Upgrade Required — your access is limited. Subscribe to unlock all features.</span>
+          </div>
+          <Link
+            href="/pricing"
+            className="bg-red-500 hover:bg-red-400 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Upgrade Now
+          </Link>
+        </div>
+      )}
+
+      {/* Trial expiring soon banner */}
+      {trialExpiringSoon && isActive && (
         <div className="bg-amber-900/30 border-b border-amber-700/50 px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2 text-amber-300 text-sm">
             <span>⚡</span>
-            <span>You're on a free trial. Upgrade to keep access after your trial ends.</span>
+            <span>Your trial expires in {daysLeft} day{daysLeft !== 1 ? 's' : ''}. Upgrade to keep access.</span>
           </div>
           <Link
             href="/pricing"
@@ -125,7 +160,14 @@ export default function DashboardPage() {
       <main className="max-w-5xl mx-auto px-6 py-10">
         {/* Sites Grid */}
         <section className="mb-12">
-          <h1 className="text-2xl font-black mb-6">Your Sites</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-black">Your Sites</h1>
+            {limits && (
+              <span className="text-sm text-slate-400 sm:hidden">
+                {sites.length} / {limits.maxSites === Infinity ? '∞' : limits.maxSites} sites used
+              </span>
+            )}
+          </div>
 
           {isLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

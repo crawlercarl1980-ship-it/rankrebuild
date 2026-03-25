@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface ConnectSiteModalProps {
   onClose: () => void;
@@ -11,10 +12,12 @@ export default function ConnectSiteModal({ onClose, onSuccess }: ConnectSiteModa
   const [form, setForm] = useState({ name: '', url: '', wp_username: '', app_password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isPlanLimitError, setIsPlanLimitError] = useState(false);
 
   async function addDemoSite() {
     setIsLoading(true);
     setError('');
+    setIsPlanLimitError(false);
     try {
       const res = await fetch('/api/sites', {
         method: 'POST',
@@ -22,7 +25,16 @@ export default function ConnectSiteModal({ onClose, onSuccess }: ConnectSiteModa
         body: JSON.stringify({ name: 'Demo Dive Shop', url: 'https://demo.rankrebuild.com', wp_username: 'demo', app_password: 'demo' }),
       });
       if (res.ok) { onSuccess(); }
-      else { const d = await res.json(); setError(d.error || 'Failed'); }
+      else {
+        const d = await res.json();
+        const errMsg = d.error || 'Failed';
+        if (errMsg.includes('Plan limit reached')) {
+          setIsPlanLimitError(true);
+          setError(errMsg);
+        } else {
+          setError(errMsg);
+        }
+      }
     } catch { setError('Failed to add demo site'); }
     finally { setIsLoading(false); }
   }
@@ -31,6 +43,7 @@ export default function ConnectSiteModal({ onClose, onSuccess }: ConnectSiteModa
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setIsPlanLimitError(false);
 
     try {
       const res = await fetch('/api/sites', {
@@ -39,7 +52,14 @@ export default function ConnectSiteModal({ onClose, onSuccess }: ConnectSiteModa
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to connect site');
+      if (!res.ok) {
+        const errMsg = data.error || 'Failed to connect site';
+        if (errMsg.includes('Plan limit reached')) {
+          setIsPlanLimitError(true);
+          throw new Error(errMsg);
+        }
+        throw new Error(errMsg);
+      }
       onSuccess();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Connection failed');
@@ -132,9 +152,25 @@ export default function ConnectSiteModal({ onClose, onSuccess }: ConnectSiteModa
             </p>
           </div>
 
-          {error && (
+          {error && !isPlanLimitError && (
             <div className="text-sm text-red-400 bg-red-950/30 border border-red-900/30 rounded-lg px-3 py-2.5">
               ⚠️ {error}
+            </div>
+          )}
+
+          {isPlanLimitError && (
+            <div className="bg-amber-950/40 border border-amber-700/50 rounded-lg px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2 text-amber-400 text-sm font-medium">
+                <span>🔒</span>
+                <span>Site limit reached on your current plan</span>
+              </div>
+              <p className="text-amber-300/80 text-xs">Upgrade your plan to connect additional sites.</p>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors mt-1"
+              >
+                🚀 Upgrade Plan
+              </Link>
             </div>
           )}
 
