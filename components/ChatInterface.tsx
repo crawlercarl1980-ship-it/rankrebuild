@@ -143,7 +143,10 @@ export default function ChatInterface({ site }: ChatInterfaceProps) {
                 {message.toolInvocations?.map((tool) => {
                   if (!tool || !tool.result) return null;
 
-                  if (tool.toolName === 'propose_change' && tool.result.status === 'awaiting_approval') {
+                  if (
+                    (tool.toolName === 'propose_change' || tool.toolName === 'replace_page_html' || tool.toolName === 'insert_image') &&
+                    tool.result.status === 'awaiting_approval'
+                  ) {
                     return (
                       <DiffPreview
                         key={tool.toolCallId || tool.id}
