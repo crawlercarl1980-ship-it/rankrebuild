@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Site, Change } from '@/types';
 import SiteCard from '@/components/SiteCard';
 import ConnectSiteModal from '@/components/ConnectSiteModal';
+import SignOutButton from '@/components/SignOutButton';
 
 export default function DashboardPage() {
   const [sites, setSites] = useState<Site[]>([]);
@@ -46,11 +47,14 @@ export default function DashboardPage() {
       {/* Top nav */}
       <header className="border-b border-slate-800 px-6 py-4 flex items-center justify-between">
         <div className="font-black text-xl">Rank<span className="text-teal-400">Rebuild</span></div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
-          <span>+</span> Connect Site
-        </button>
+        <div className="flex items-center gap-3">
+          <SignOutButton />
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+            <span>+</span> Connect Site
+          </button>
+        </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10">

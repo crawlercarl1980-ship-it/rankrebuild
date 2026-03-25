@@ -9,8 +9,8 @@ export default function LandingPage() {
           Rank<span className="text-teal-400">Rebuild</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/auth/login" className="text-sm text-slate-400 hover:text-white transition-colors">Sign In</Link>
-          <Link href="/auth/signup"
+          <Link href="/auth" className="text-sm text-slate-400 hover:text-white transition-colors">Sign In</Link>
+          <Link href="/auth"
             className="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold text-sm px-4 py-2 rounded-lg transition-colors">
             Start Free Trial
           </Link>
@@ -31,7 +31,7 @@ export default function LandingPage() {
           Deploy with one click. No technical knowledge required.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
-          <Link href="/auth/signup"
+          <Link href="/auth"
             className="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold text-lg px-8 py-4 rounded-xl transition-colors shadow-lg shadow-teal-500/20">
             Start Free Trial
           </Link>
@@ -98,7 +98,7 @@ export default function LandingPage() {
                 <li key={f} className="flex items-center gap-2"><span className="text-teal-400">✓</span>{f}</li>
               ))}
             </ul>
-            <Link href="/auth/signup"
+            <Link href="/auth"
               className="block text-center border border-teal-500 text-teal-400 hover:bg-teal-500/10 font-bold py-3 rounded-xl transition-colors">
               Start Free Trial
             </Link>
@@ -117,7 +117,7 @@ export default function LandingPage() {
                 <li key={f} className="flex items-center gap-2"><span className="text-teal-400">✓</span>{f}</li>
               ))}
             </ul>
-            <Link href="/auth/signup"
+            <Link href="/auth"
               className="block text-center bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold py-3 rounded-xl transition-colors">
               Start Free Trial
             </Link>
@@ -127,7 +127,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 px-8 py-8 text-center text-sm text-slate-500">
-        <div className="font-black text-white text-lg mb-2">Site<span className="text-teal-400">Pilot</span></div>
+        <div className="font-black text-white text-lg mb-2">Rank<span className="text-teal-400">Rebuild</span></div>
         <p>© 2026 RankRebuild · AI-powered website management</p>
       </footer>
     </div>

@@ -1,16 +1,27 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseClient, createSupabaseAdmin } from '@/lib/supabase';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { createSupabaseAdmin } from '@/lib/supabase';
 import { testConnection, getSEOPlugin } from '@/lib/wordpress';
 
-// DEV MODE: auth bypassed for local testing
-const DEV_USER_ID = '00000000-0000-0000-0000-000000000001';
+async function getUserId(): Promise<string | null> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET() {
+  const userId = await getUserId();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const admin = createSupabaseAdmin();
   const { data, error } = await admin
     .from('sites')
     .select('*')
-    .eq('user_id', DEV_USER_ID)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -18,8 +29,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const session = { user: { id: DEV_USER_ID } };
+  const userId = await getUserId();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { name, url, wp_username, app_password } = await req.json();
   if (!name || !url || !wp_username || !app_password) {
@@ -38,7 +49,7 @@ export async function POST(req: Request) {
   const admin = createSupabaseAdmin();
   const { data, error } = await admin
     .from('sites')
-    .insert({ name, url, wp_username, app_password, seo_plugin, user_id: DEV_USER_ID })
+    .insert({ name, url, wp_username, app_password, seo_plugin, user_id: userId })
     .select()
     .single();
 
@@ -47,13 +58,16 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const userId = await getUserId();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const { id } = await req.json();
   const admin = createSupabaseAdmin();
   const { error } = await admin
     .from('sites')
     .delete()
     .eq('id', id)
-    .eq('user_id', DEV_USER_ID);
+    .eq('user_id', userId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
