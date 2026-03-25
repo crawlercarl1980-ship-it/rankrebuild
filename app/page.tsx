@@ -149,17 +149,17 @@ export default function LandingPage() {
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-700/40 to-transparent" />
         </section>
 
-        {/* ── Social Proof Bar ─────────────────────────────────────── */}
+        {/* ── Trust Bar ─────────────────────────────────────── */}
         <section className="border-y border-slate-800/40 bg-slate-900/20 py-5">
           <div className="max-w-5xl mx-auto px-6">
             <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-slate-500 text-sm">
-              <span className="text-slate-400 font-medium">Trusted by 500+ WordPress site owners</span>
+              <span>🔒&nbsp; Your data stays private</span>
               <span className="hidden md:block w-px h-4 bg-slate-700" />
-              <span>⭐⭐⭐⭐⭐&nbsp; 4.9 average rating</span>
+              <span>↩️&nbsp; Every change is reversible</span>
               <span className="hidden md:block w-px h-4 bg-slate-700" />
-              <span>🔒&nbsp; SOC 2 compliant infrastructure</span>
+              <span>⚡&nbsp; Built for WordPress</span>
               <span className="hidden md:block w-px h-4 bg-slate-700" />
-              <span>⚡&nbsp; 2,000+ sites managed</span>
+              <span>🆓&nbsp; 14-day free trial</span>
             </div>
           </div>
         </section>
