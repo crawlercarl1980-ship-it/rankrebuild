@@ -5,18 +5,57 @@ import { ProposedChange } from '@/types';
 
 interface DiffPreviewProps {
   change: ProposedChange;
+  siteUrl: string;
   siteId: string;
   onApprove: (deployUrl: string) => void;
   onRevise: (feedback: string) => void;
 }
 
-export default function DiffPreview({ change, siteId, onApprove, onRevise }: DiffPreviewProps) {
+type ViewMode = 'diff' | 'preview';
+
+export default function DiffPreview({ change, siteUrl, siteId, onApprove, onRevise }: DiffPreviewProps) {
   const [isDeploying, setIsDeploying] = useState(false);
   const [reviseMode, setReviseMode] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [deployed, setDeployed] = useState(false);
   const [deployedUrl, setDeployedUrl] = useState('');
   const [error, setError] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('diff');
+
+  // Build a preview HTML page with the new content injected
+  const previewHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Preview: ${change.page_title}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #fff; color: #111; line-height: 1.6; }
+    .preview-banner { background: #14b8a6; color: #0f172a; font-size: 12px; font-weight: 700; text-align: center; padding: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .preview-content { max-width: 860px; margin: 0 auto; padding: 32px 24px; }
+    .preview-content h1 { font-size: 2rem; font-weight: 800; margin: 0 0 16px; }
+    .preview-content h2 { font-size: 1.4rem; font-weight: 700; margin: 24px 0 12px; }
+    .preview-content p { margin: 0 0 16px; color: #333; }
+    .preview-content ul, .preview-content ol { padding-left: 24px; margin: 0 0 16px; }
+    .preview-content li { margin-bottom: 6px; }
+    .changed-field { background: #f0fdf4; border-left: 4px solid #14b8a6; padding: 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .changed-label { font-size: 11px; font-weight: 700; color: #14b8a6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="preview-banner">🔍 Preview Mode — Changes highlighted in green</div>
+  <div class="preview-content">
+    <h1>${change.page_title}</h1>
+    <div class="changed-field">
+      <div class="changed-label">✏️ ${change.field} (proposed change)</div>
+      ${change.new_value}
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const previewSrc = `data:text/html;charset=utf-8,${encodeURIComponent(previewHtml)}`;
 
   async function handleApprove(e?: React.MouseEvent) {
     e?.preventDefault();
@@ -77,28 +116,58 @@ export default function DiffPreview({ change, siteId, onApprove, onRevise }: Dif
           <span className="text-xs text-slate-400 uppercase tracking-wider">Proposed Change</span>
           <div className="text-sm font-semibold text-white mt-0.5">{change.page_title} → {change.field}</div>
         </div>
-        <span className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded-full font-medium">Pending Approval</span>
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex bg-slate-700/50 rounded-lg p-0.5 text-xs">
+            <button
+              onClick={() => setViewMode('diff')}
+              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${viewMode === 'diff' ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+              Diff
+            </button>
+            <button
+              onClick={() => setViewMode('preview')}
+              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${viewMode === 'preview' ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+              Preview
+            </button>
+          </div>
+          <span className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded-full font-medium">Pending</span>
+        </div>
       </div>
 
-      {/* Diff */}
-      <div className="grid grid-cols-2 divide-x divide-slate-700">
-        <div className="p-4">
-          <div className="text-xs font-semibold text-red-400 mb-2 flex items-center gap-1">
-            <span>−</span> Before
+      {/* Diff view */}
+      {viewMode === 'diff' && (
+        <div className="grid grid-cols-2 divide-x divide-slate-700">
+          <div className="p-4">
+            <div className="text-xs font-semibold text-red-400 mb-2 flex items-center gap-1">
+              <span>−</span> Before
+            </div>
+            <div className="text-sm text-slate-300 leading-relaxed bg-red-950/20 border border-red-900/30 rounded-lg p-3 min-h-[80px] whitespace-pre-wrap">
+              {change.old_value || <span className="text-slate-500 italic">empty</span>}
+            </div>
           </div>
-          <div className="text-sm text-slate-300 leading-relaxed bg-red-950/20 border border-red-900/30 rounded-lg p-3 min-h-[80px] whitespace-pre-wrap">
-            {change.old_value || <span className="text-slate-500 italic">empty</span>}
+          <div className="p-4">
+            <div className="text-xs font-semibold text-green-400 mb-2 flex items-center gap-1">
+              <span>+</span> After
+            </div>
+            <div className="text-sm text-slate-300 leading-relaxed bg-green-950/20 border border-green-900/30 rounded-lg p-3 min-h-[80px] whitespace-pre-wrap">
+              {change.new_value}
+            </div>
           </div>
         </div>
-        <div className="p-4">
-          <div className="text-xs font-semibold text-green-400 mb-2 flex items-center gap-1">
-            <span>+</span> After
-          </div>
-          <div className="text-sm text-slate-300 leading-relaxed bg-green-950/20 border border-green-900/30 rounded-lg p-3 min-h-[80px] whitespace-pre-wrap">
-            {change.new_value}
-          </div>
+      )}
+
+      {/* Preview view */}
+      {viewMode === 'preview' && (
+        <div className="relative bg-white">
+          <iframe
+            src={previewSrc}
+            className="w-full border-0"
+            style={{ height: '380px' }}
+            title="Page preview"
+            sandbox="allow-same-origin"
+          />
         </div>
-      </div>
+      )}
 
       {/* Error */}
       {error && (

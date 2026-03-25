@@ -155,6 +155,7 @@ export default function ChatInterface({ site }: ChatInterfaceProps) {
                           new_value: tool.result.new_value,
                         }}
                         siteId={site.id}
+                        siteUrl={site.url}
                         onApprove={() => {
                           // Don't trigger another chat round after deploy - just show success
                         }}
