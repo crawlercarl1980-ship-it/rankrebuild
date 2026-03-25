@@ -1,8 +1,40 @@
 import https from 'https';
 import http from 'http';
 
-// Promisified http/https request that won't crash the server on ECONNRESET
-export function wpRequest(
+// Promisified http/https request with retry logic for ECONNRESET (LocalWP issue)
+export async function wpRequest(
+  url: string,
+  options: {
+    method?: string;
+    headers?: Record<string, string>;
+    body?: string;
+    timeout?: number;
+    retries?: number;
+  } = {}
+): Promise<{ status: number; body: string }> {
+  const maxRetries = options.retries ?? 3;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await wpRequestOnce(url, options);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const isRetryable = msg.includes('ECONNRESET') || msg.includes('ECONNREFUSED') || msg.includes('socket hang up');
+
+      if (isRetryable && attempt < maxRetries) {
+        // Wait 300ms before retrying
+        await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  // Should never reach here
+  throw new Error('wpRequest: exhausted retries');
+}
+
+function wpRequestOnce(
   url: string,
   options: {
     method?: string;
@@ -34,23 +66,11 @@ export function wpRequest(
       let data = '';
       res.on('data', chunk => { data += chunk; });
       res.on('end', () => resolve({ status: res.statusCode || 0, body: data }));
-      res.on('error', (e) => {
-        reject(new Error(`WordPress response error: ${e.message}`));
-      });
-      res.on('aborted', () => {
-        reject(new Error('WordPress response aborted'));
-      });
+      res.on('error', (e) => reject(new Error(`WordPress response error: ${e.message}`)));
+      res.on('aborted', () => reject(new Error('WordPress response aborted')));
     });
 
-    req.on('error', (e) => {
-      // Catch ECONNRESET and other network errors here so they don't escape
-      reject(new Error(`WordPress request failed: ${e.message}`));
-    });
-
-    req.on('close', () => {
-      // Normal close - ignore
-    });
-
+    req.on('error', (e) => reject(new Error(`WordPress request failed: ${e.message}`)));
     req.on('timeout', () => {
       req.destroy();
       reject(new Error('WordPress request timed out'));
