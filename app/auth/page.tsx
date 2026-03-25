@@ -14,12 +14,20 @@ export default function AuthPage() {
 
   useEffect(() => {
     setOrigin(window.location.origin)
-    setSupabase(
-      createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
+    const client = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
+    setSupabase(client)
+
+    // Listen for auth state changes and redirect on sign-in
+    const { data: { subscription } } = client.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        window.location.href = '/dashboard'
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   return (
