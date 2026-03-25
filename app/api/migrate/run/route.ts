@@ -156,33 +156,25 @@ async function scrapeSite(startUrl: string): Promise<ScrapedPage[]> {
 // ─── Step 2: Spin up WordPress (STUBBED — swap in InstaWP when key is ready) ──
 
 async function provisionWordPress(businessName: string): Promise<WPCredentials> {
-  // TODO: Replace this stub with real InstaWP API call when INSTAWP_API_KEY is set.
-  // InstaWP API docs: https://app.instawp.io/api/v2/sites
-  //
-  // Real implementation:
-  // const res = await fetch('https://app.instawp.io/api/v2/sites', {
-  //   method: 'POST',
-  //   headers: {
-  //     Authorization: `Bearer ${process.env.INSTAWP_API_KEY}`,
-  //     'Content-Type': 'application/json',
-  //   },
-  //   body: JSON.stringify({
-  //     name: businessName.toLowerCase().replace(/\s+/g, '-').substring(0, 30),
-  //     template_id: process.env.INSTAWP_TEMPLATE_ID || '',
-  //   }),
-  // });
-  // const data = await res.json();
-  // return {
-  //   site_url: data.url,
-  //   wp_username: data.wp_username,
-  //   app_password: data.app_password,
-  // };
-
-  const slug = businessName.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20) || 'site';
+  const res = await fetch('https://app.instawp.io/api/v2/sites', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.INSTAWP_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: businessName.toLowerCase().replace(/\s+/g, '-').substring(0, 30),
+      template_id: process.env.INSTAWP_TEMPLATE_ID || '',
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(`InstaWP provisioning failed: ${JSON.stringify(data).substring(0, 200)}`);
+  }
   return {
-    site_url: `https://${slug}-preview.instawp.xyz`,
-    wp_username: 'admin',
-    app_password: 'stub-password-replace-me',
+    site_url: data.url,
+    wp_username: data.wp_username,
+    app_password: data.app_password,
   };
 }
 
