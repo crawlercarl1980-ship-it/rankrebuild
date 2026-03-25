@@ -1,43 +1,27 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export const runtime = 'nodejs'
-
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  const pathname = request.nextUrl.pathname
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+  // Check for Supabase session cookie (sb-*-auth-token)
+  const cookies = request.cookies.getAll()
+  const hasSession = cookies.some(c => c.name.includes('auth-token') && c.value.length > 10)
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user && (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/chat'))) {
+  // Protect dashboard and chat routes
+  if (!hasSession && (pathname.startsWith('/dashboard') || pathname.startsWith('/chat'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
     return NextResponse.redirect(url)
   }
 
-  if (user && request.nextUrl.pathname === '/auth') {
+  // Redirect logged-in users away from auth page
+  if (hasSession && pathname === '/auth') {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
-  return supabaseResponse
+  return NextResponse.next()
 }
 
 export const config = {
