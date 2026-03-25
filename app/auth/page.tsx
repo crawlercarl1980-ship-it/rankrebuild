@@ -1,21 +1,26 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export default function AuthPage() {
   const [origin, setOrigin] = useState('')
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
 
   useEffect(() => {
     setOrigin(window.location.origin)
+    setSupabase(
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+    )
   }, [])
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
 
   return (
     <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center px-4">
@@ -29,7 +34,7 @@ export default function AuthPage() {
 
       {/* Auth Card */}
       <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
-        {origin && (
+        {supabase && origin ? (
           <Auth
             supabaseClient={supabase}
             appearance={{
@@ -88,6 +93,10 @@ export default function AuthPage() {
             providers={[]}
             redirectTo={origin + '/auth/callback'}
           />
+        ) : (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+          </div>
         )}
       </div>
 
