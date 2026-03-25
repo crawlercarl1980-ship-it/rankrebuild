@@ -1,5 +1,6 @@
 import { WPPage, BlogPost } from '@/types';
 import { wpRequest } from './wordpress-request';
+import { isDemoSite, getDemoPages, getDemoPage } from './demo-data';
 
 // Set globally for local dev - allows self-signed certs from LocalWP
 // This is safe because we only connect to local/trusted WordPress sites
@@ -28,6 +29,7 @@ export async function testConnection(
   username: string,
   appPassword: string
 ): Promise<{ ok: boolean; error?: string }> {
+  if (isDemoSite(siteUrl)) return { ok: true };
   try {
     const response = await wpRequest(apiUrl(siteUrl, 'users/me'), {
       headers: { Authorization: authHeader(username, appPassword) },
@@ -47,6 +49,7 @@ export async function getPages(
   username: string,
   appPassword: string
 ): Promise<WPPage[]> {
+  if (isDemoSite(siteUrl)) return getDemoPages();
   const response = await wpRequest(apiUrl(siteUrl, 'pages?per_page=50&status=publish'), {
     headers: { Authorization: authHeader(username, appPassword) },
   });
@@ -60,6 +63,11 @@ export async function getPage(
   appPassword: string,
   pageId: number
 ): Promise<WPPage> {
+  if (isDemoSite(siteUrl)) {
+    const page = getDemoPage(pageId);
+    if (!page) throw new Error(`Demo page ${pageId} not found`);
+    return page;
+  }
   const response = await wpRequest(apiUrl(siteUrl, `pages/${pageId}`), {
     headers: { Authorization: authHeader(username, appPassword) },
   });
@@ -76,6 +84,12 @@ export async function updatePage(
   pageId: number,
   updates: { title?: string; content?: string }
 ): Promise<WPPage> {
+  if (isDemoSite(siteUrl)) {
+    // Simulate a successful update in demo mode
+    const page = getDemoPage(pageId);
+    if (!page) throw new Error(`Demo page ${pageId} not found`);
+    return { ...page, ...updates, title: { rendered: updates.title || page.title.rendered }, content: { rendered: updates.content || page.content.rendered } };
+  }
   // Use node http module directly to avoid ECONNRESET crashing the server
   const response = await wpRequest(apiUrl(siteUrl, `pages/${pageId}`), {
     method: 'POST',
@@ -149,6 +163,7 @@ export async function getSEOPlugin(
   username: string,
   appPassword: string
 ): Promise<'yoast' | 'rankmath' | 'none'> {
+  if (isDemoSite(siteUrl)) return 'yoast';
   try {
     const res = await wpRequest(apiUrl(siteUrl, 'plugins?per_page=100'), {
       headers: { Authorization: authHeader(username, appPassword) },

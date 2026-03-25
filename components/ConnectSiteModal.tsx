@@ -12,6 +12,21 @@ export default function ConnectSiteModal({ onClose, onSuccess }: ConnectSiteModa
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  async function addDemoSite() {
+    setIsLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/sites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Demo Dive Shop', url: 'https://demo.rankrebuild.com', wp_username: 'demo', app_password: 'demo' }),
+      });
+      if (res.ok) { onSuccess(); }
+      else { const d = await res.json(); setError(d.error || 'Failed'); }
+    } catch { setError('Failed to add demo site'); }
+    finally { setIsLoading(false); }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
@@ -40,6 +55,22 @@ export default function ConnectSiteModal({ onClose, onSuccess }: ConnectSiteModa
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700">
           <h2 className="text-lg font-bold text-white">Connect WordPress Site</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-xl leading-none">✕</button>
+        </div>
+
+        {/* Demo shortcut */}
+        <div className="px-6 pt-5">
+          <button
+            type="button"
+            onClick={addDemoSite}
+            disabled={isLoading}
+            className="w-full bg-teal-900/40 border border-teal-700/50 hover:bg-teal-900/70 text-teal-300 font-medium text-sm px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+            🎯 Add Demo Site (test without a real WordPress site)
+          </button>
+          <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 h-px bg-slate-700" />
+            <span className="text-xs text-slate-500">or connect a real site</span>
+            <div className="flex-1 h-px bg-slate-700" />
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
