@@ -116,6 +116,11 @@ export default function DashboardPage() {
               {sites.length} / {limits.maxSites === Infinity ? '∞' : limits.maxSites} site{limits.maxSites !== 1 ? 's' : ''} used
             </span>
           )}
+          <Link
+            href="/migrate"
+            className="hidden sm:inline-flex items-center gap-1.5 text-sm text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 px-3 py-2 rounded-lg transition-colors">
+            🚀 Migrate a Site
+          </Link>
           <SignOutButton />
           <button
             onClick={() => setShowModal(true)}

@@ -7,8 +7,8 @@ export async function middleware(request: NextRequest) {
   const cookies = request.cookies.getAll()
   const hasSession = cookies.some(c => c.name.includes('auth-token') && c.value.length > 10)
 
-  // Protect dashboard and chat routes
-  if (!hasSession && (pathname.startsWith('/dashboard') || pathname.startsWith('/chat'))) {
+  // Protect dashboard, chat, and migrate routes
+  if (!hasSession && (pathname.startsWith('/dashboard') || pathname.startsWith('/chat') || pathname.startsWith('/migrate'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
     return NextResponse.redirect(url)
@@ -25,5 +25,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/chat/:path*', '/auth'],
+  matcher: ['/dashboard/:path*', '/chat/:path*', '/migrate/:path*', '/migrate', '/auth'],
 }
