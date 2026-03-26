@@ -33,7 +33,17 @@ export default function MigratePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [urlError, setUrlError] = useState('');
+  const [copiedLink, setCopiedLink] = useState(false);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function copyApprovalLink() {
+    if (!jobId) return;
+    const link = `${window.location.origin}/preview/${jobId}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    });
+  }
 
   function validateUrl(value: string): boolean {
     try {
@@ -290,10 +300,17 @@ export default function MigratePage() {
                   href={previewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full text-center bg-teal-500 hover:bg-teal-400 text-slate-900 font-black py-3 rounded-xl transition-colors mb-4"
+                  className="block w-full text-center bg-teal-500 hover:bg-teal-400 text-slate-900 font-black py-3 rounded-xl transition-colors mb-3"
                 >
                   Preview My New Site →
                 </a>
+
+                <button
+                  onClick={copyApprovalLink}
+                  className="block w-full text-center bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors mb-4"
+                >
+                  {copiedLink ? '✅ Copied!' : '📋 Copy Client Approval Link'}
+                </button>
 
                 <details className="group">
                   <summary className="cursor-pointer text-sm text-slate-400 hover:text-white transition-colors select-none">
