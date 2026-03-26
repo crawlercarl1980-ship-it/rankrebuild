@@ -153,28 +153,39 @@ async function scrapeSite(startUrl: string): Promise<ScrapedPage[]> {
   }
 }
 
-// ─── Step 2: Spin up WordPress (STUBBED — swap in InstaWP when key is ready) ──
+// ─── Step 2: Spin up WordPress via TasteWP (free, no API key needed) ──────────
 
-async function provisionWordPress(businessName: string): Promise<WPCredentials> {
-  const res = await fetch('https://app.instawp.io/api/v2/sites', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.INSTAWP_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      name: businessName.toLowerCase().replace(/\s+/g, '-').substring(0, 30),
-      template_id: process.env.INSTAWP_TEMPLATE_ID || '',
-    }),
+async function provisionWordPress(_businessName: string): Promise<WPCredentials> {
+  // TasteWP spins up a free WP site instantly via a simple GET request
+  const res = await fetch('https://tastewp.com/new/', {
+    method: 'GET',
+    redirect: 'follow',
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RankRebuild/1.0)' },
+    signal: AbortSignal.timeout(60000),
   });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(`InstaWP provisioning failed: ${JSON.stringify(data).substring(0, 200)}`);
+
+  // TasteWP redirects to a URL like: https://tastewp.com/create/NMS/8.5/6.9.4/site-name/theme
+  // The actual WP site URL is embedded in the page or derived from the final URL
+  const finalUrl = res.url;
+
+  // Extract the site identifier from the redirect URL
+  // Format: https://tastewp.com/create/NMS/{php}/{wp}/{sitename}/{theme}
+  const siteNameMatch = finalUrl.match(/\/create\/[^/]+\/[^/]+\/[^/]+\/([^/]+)/);
+  if (!siteNameMatch) {
+    throw new Error(`TasteWP: could not parse site name from URL: ${finalUrl}`);
   }
+
+  const siteName = siteNameMatch[1];
+  const siteUrl = `https://${siteName}.tastewp.com`;
+
+  // TasteWP auto-login credentials are always admin/admin for fresh sites
+  // The site needs a few seconds to boot up
+  await new Promise(resolve => setTimeout(resolve, 15000));
+
   return {
-    site_url: data.url,
-    wp_username: data.wp_username,
-    app_password: data.app_password,
+    site_url: siteUrl,
+    wp_username: 'admin',
+    app_password: 'admin',
   };
 }
 
