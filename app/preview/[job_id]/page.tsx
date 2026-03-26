@@ -133,14 +133,21 @@ export default function PreviewPage() {
           </a>
         </div>
 
-        <div className="rounded-2xl overflow-hidden border border-slate-700 flex-1" style={{ minHeight: '70vh' }}>
-          <iframe
-            src={job.preview_url!}
-            className="w-full h-full"
-            style={{ minHeight: '70vh' }}
-            title={`Preview of ${job.business_name}`}
-            allow="fullscreen"
-          />
+        <div className="rounded-2xl border border-slate-700 bg-slate-900/50 flex flex-col items-center justify-center gap-6 p-12" style={{ minHeight: '40vh' }}>
+          <div className="text-6xl">🌐</div>
+          <div className="text-center">
+            <p className="text-slate-400 mb-2">Your new WordPress site is ready to review</p>
+            <p className="text-slate-500 text-sm font-mono">{job.preview_url}</p>
+          </div>
+          <a
+            href={job.preview_url!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-teal-500 hover:bg-teal-400 text-slate-900 font-black text-lg px-10 py-4 rounded-xl transition-colors"
+          >
+            Open Your New Site →
+          </a>
+          <p className="text-slate-600 text-sm">Opens in a new tab — come back here to approve or request changes</p>
         </div>
       </div>
 
