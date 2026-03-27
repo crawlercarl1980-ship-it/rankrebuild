@@ -93,27 +93,56 @@ export async function generatePreviewSite(
   const allImages = scrapedPages.flatMap(p => p.images).filter(Boolean).slice(0, 15);
   const pageList = scrapedPages.map(p => p.title || p.url).filter(Boolean).slice(0, 10);
   
-  // Pass raw HTML so Claude can extract real prices, products, images, links
-  // Keep it tight to stay within Vercel's function timeout
+  // Step 1: Extract structured data from raw HTML using a fast, focused call
   const rawHtmlSample = scrapedPages
     .slice(0, 2)
-    .map(p => p.raw_html?.substring(0, 8000) || '')
+    .map(p => p.raw_html?.substring(0, 10000) || '')
     .join('\n\n--- NEXT PAGE ---\n\n')
-    .substring(0, 14000);
+    .substring(0, 18000);
+
+  // Extract key business data first (fast, small output)
+  let extractedData = '';
+  if (rawHtmlSample.length > 100) {
+    const extractMsg = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
+      messages: [{
+        role: 'user',
+        content: `Extract key business info from this HTML. Return ONLY a JSON object with these fields (use null if not found):
+{
+  "phone": string,
+  "email": string,
+  "address": string,
+  "hours": string,
+  "tagline": string,
+  "prices": [{"name": string, "price": string, "description": string}],
+  "services": [{"name": string, "description": string}],
+  "images": ["url1", "url2"],
+  "team": [{"name": string, "role": string}],
+  "social": {"instagram": string, "facebook": string}
+}
+
+HTML:
+${rawHtmlSample.substring(0, 15000)}`
+      }]
+    });
+    const extractContent = extractMsg.content[0];
+    if (extractContent.type === 'text') {
+      extractedData = extractContent.text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+    }
+  }
 
   const prompt = `You are a world-class web designer building a $10,000 custom website. Create a complete, stunning, mobile-responsive single-page HTML website for "${businessName}".
 
-SCRAPED CONTENT — EXTRACT EVERYTHING USEFUL:
+BUSINESS DATA (use ALL of this — real content only, no placeholders):
 - Business name: ${businessName}
-- Main title: ${primaryPage.title || businessName}
-- Meta description: ${primaryPage.meta_description || ''}
-- Pages found: ${pageList.join(', ')}
-- Key headings: ${allHeadings.slice(0, 12).join(' | ')}
-- Content excerpts: ${allParagraphs.slice(0, 10).map((p, i) => `${i + 1}. ${p.substring(0, 150)}`).join(' | ')}
-- Known images (use these as real src URLs): ${allImages.join(', ')}
-
-RAW HTML FROM THEIR WEBSITE (extract real prices, services, course names, team members, phone numbers, addresses, hours, images, specific offerings — use ALL real data you find):
-${rawHtmlSample}
+- Title: ${primaryPage.title || businessName}
+- Description: ${primaryPage.meta_description || ''}
+- Pages: ${pageList.join(', ')}
+- Headings: ${allHeadings.slice(0, 10).join(' | ')}
+- Content: ${allParagraphs.slice(0, 8).map(p => p.substring(0, 120)).join(' | ')}
+- Images (use as real src): ${allImages.slice(0, 8).join(', ')}
+${extractedData ? `- Extracted structured data: ${extractedData}` : ''}
 
 EXACT DESIGN SYSTEM TO IMPLEMENT:
 CSS variables:
@@ -228,7 +257,7 @@ Return ONLY the complete HTML. No markdown fences. No explanation. Start with <!
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 12000,
+    max_tokens: 20000,
     messages: [{ role: 'user', content: prompt }],
   });
 
