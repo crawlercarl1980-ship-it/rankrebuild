@@ -94,11 +94,12 @@ export async function generatePreviewSite(
   const pageList = scrapedPages.map(p => p.title || p.url).filter(Boolean).slice(0, 10);
   
   // Pass raw HTML so Claude can extract real prices, products, images, links
+  // Keep it tight to stay within Vercel's function timeout
   const rawHtmlSample = scrapedPages
-    .slice(0, 3)
-    .map(p => p.raw_html?.substring(0, 15000) || '')
+    .slice(0, 2)
+    .map(p => p.raw_html?.substring(0, 8000) || '')
     .join('\n\n--- NEXT PAGE ---\n\n')
-    .substring(0, 40000);
+    .substring(0, 14000);
 
   const prompt = `You are a world-class web designer building a $10,000 custom website. Create a complete, stunning, mobile-responsive single-page HTML website for "${businessName}".
 
@@ -227,7 +228,7 @@ Return ONLY the complete HTML. No markdown fences. No explanation. Start with <!
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 32000,
+    max_tokens: 12000,
     messages: [{ role: 'user', content: prompt }],
   });
 

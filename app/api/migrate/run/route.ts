@@ -3,6 +3,8 @@ import { createSupabaseAdmin } from '@/lib/supabase';
 import Anthropic from '@anthropic-ai/sdk';
 import { provisionWordPressSite, type ScrapedPage } from '@/lib/wp-provision';
 
+export const maxDuration = 300; // Vercel max function duration in seconds
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
