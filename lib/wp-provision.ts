@@ -257,16 +257,20 @@ IMPORTANT: You have a token budget. Be complete but efficient — don't repeat y
 
 Return ONLY the complete HTML. No markdown fences. No explanation. Start with <!DOCTYPE html>.`;
 
-  const message = await anthropic.messages.create({
+  let html = '';
+  const stream = await anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
     max_tokens: 24000,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const content = message.content[0];
-  if (content.type !== 'text') throw new Error('Claude did not return text');
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      html += event.delta.text;
+    }
+  }
 
-  let html = content.text.trim();
+  html = html.trim();
   // Strip markdown fences if present
   html = html.replace(/^```(?:html)?\n?/, '').replace(/\n?```$/, '').trim();
   
