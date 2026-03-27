@@ -260,7 +260,7 @@ Return ONLY the complete HTML. No markdown fences. No explanation. Start with <!
   let html = '';
   const stream = await anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
-    max_tokens: 24000,
+    max_tokens: 64000,
     messages: [{ role: 'user', content: prompt }],
   });
 
