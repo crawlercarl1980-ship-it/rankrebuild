@@ -101,35 +101,58 @@ SCRAPED CONTENT TO USE:
 - Key headings from site: ${allHeadings.slice(0, 12).join(' | ')}
 - Content excerpts:
 ${allParagraphs.slice(0, 15).map((p, i) => `${i + 1}. ${p.substring(0, 200)}`).join('\n')}
-${allImages.length > 0 ? `- Original images (use these): ${allImages.slice(0, 5).join(', ')}` : ''}
+${allImages.length > 0 ? `- Original images (use these as src): ${allImages.slice(0, 6).join(', ')}` : ''}
 
-DESIGN REQUIREMENTS:
-- Use Tailwind CSS via CDN (https://cdn.tailwindcss.com)
-- Use Google Fonts (Inter or similar professional font)
-- Include a sticky navbar with the business name and nav links
-- Beautiful hero section with a gradient background, large headline, subheadline, and CTA button
-- Services/Features section with icon cards (use SVG icons or emoji)
-- About section with compelling copy
-- Testimonials section (fabricate 3 realistic ones based on the business type)
-- Contact section with a clean form layout (name, email, message, send button) — no backend needed, just show a "Thanks!" on submit
-- Professional footer with links and copyright
-- Subtle scroll animations using CSS (no JS libraries needed)
-- Color scheme: derive a professional palette from the business type (e.g. blue for tech, green for health, etc.)
-- NO placeholder content like "Lorem ipsum" — use the real scraped content and reasonable inferred copy
-- The site should look like it cost $5,000 to build
-- Include a banner at the very top (small, dismissible): "✨ Preview — Your New Website" with a close button
+DESIGN STYLE — match this exact aesthetic:
+- Deep dark navy background: #0a1628 for main bg, #0d3b6e for section accents
+- Teal accent color: #00bcd4 (borders, highlights, CTA buttons, hover states)
+- Gold accent: #f4a81d for special highlights and stars
+- White text on dark backgrounds, dark text on light cards
+- Font: 'Segoe UI', system-ui, sans-serif — clean and professional
+- Fixed navbar: rgba(10,22,40,0.92) with backdrop-filter blur, teal bottom border, height 70px
+- Hero: full viewport height, dark overlay on background image from Unsplash (use a relevant search term for the business), large bold white headline, teal subheadline, gold CTA button, scroll indicator
+- Sections alternate: dark (#0a1628) and slightly lighter (#0d2645)
+- Cards: dark bg with subtle teal border, hover lift effect (translateY(-6px) with box-shadow)
+- Section headers: small teal uppercase label above large white bold title
+- Buttons: teal background, white text, rounded, hover gold
+- Footer: very dark (#060e1a), teal accent borders
 
-TECHNICAL:
-- Single HTML file, complete and self-contained
-- All CSS via Tailwind + inline <style> for custom animations
-- Minimal vanilla JS only (mobile menu toggle, form submit handler, banner dismiss)
-- Return ONLY the complete HTML — no markdown, no explanation, no code fences
+REQUIRED SECTIONS (in order):
+1. Fixed nav with logo text + nav links (Home, About, Services, [business-specific page], Contact) + mobile hamburger
+2. Hero: full-height, background image from Unsplash (pick a great relevant photo URL), dark overlay, business name, tagline, CTA "Get Started" button, animated scroll arrow
+3. "Why Choose Us" / Features: 3-4 cards with SVG icons, titles, descriptions based on real content
+4. Services/Offerings: grid of service cards with real content from the scraped pages
+5. About section: split layout — compelling copy left, stats/highlights right
+6. Testimonials: 3 realistic testimonials with star ratings, names, realistic quotes based on business type
+7. Call-to-action banner: full-width teal/navy gradient, strong headline, button
+8. Contact: dark section, form (name, email, phone, message) + contact info sidebar
+9. Footer: logo, nav links, social icons (Instagram, Facebook, Twitter placeholders), copyright
 
-Generate the complete HTML now:`;
+ANIMATIONS:
+- Scroll reveal: elements start opacity:0 translateY(40px), animate to visible on scroll (use IntersectionObserver)
+- Nav hides/shows on scroll (hide on scroll down, show on scroll up)
+- Smooth hover transitions on all cards and buttons
+- Hero text fade-in on load
+
+TECHNICAL REQUIREMENTS:
+- Pure HTML/CSS/vanilla JS — NO external JS frameworks or Tailwind CDN
+- All CSS inline in <style> tag — write proper custom CSS (not Tailwind classes)
+- Use CSS custom properties (--variables) for the color system
+- Mobile responsive with hamburger menu
+- Form shows inline "Thanks! We'll be in touch." success message on submit
+- Small dismissible banner at very top: background #0d3b6e, teal border-bottom, text "✨ Preview of your new website — powered by RankRebuild" with ✕ close button
+
+CONTENT RULES:
+- Use ALL real scraped content — no lorem ipsum ever
+- Write compelling marketing copy based on the real business
+- Testimonials should sound authentic to the specific business type and location
+- Service descriptions should expand on the scraped content intelligently
+
+Return ONLY the complete HTML document. No markdown fences, no explanation, just the HTML starting with <!DOCTYPE html>.`;
 
   const message = await anthropic.messages.create({
-    model: 'claude-opus-4-5',
-    max_tokens: 8000,
+    model: 'claude-sonnet-4-6',
+    max_tokens: 16000,
     messages: [{ role: 'user', content: prompt }],
   });
 
