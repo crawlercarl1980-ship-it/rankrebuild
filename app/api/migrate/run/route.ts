@@ -1,25 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdmin } from '@/lib/supabase';
 import Anthropic from '@anthropic-ai/sdk';
+import { provisionWordPressSite, type ScrapedPage } from '@/lib/wp-provision';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ScrapedPage {
-  url: string;
-  title: string;
-  meta_description: string;
-  headings: string[];
-  paragraphs: string[];
-  images: string[];
-  raw_html: string;
-}
-
 interface WPCredentials {
   site_url: string;
   wp_username: string;
   app_password: string;
+  is_preview?: boolean;
 }
 
 // ─── Step 1: Scraper ──────────────────────────────────────────────────────────
@@ -153,42 +145,6 @@ async function scrapeSite(startUrl: string): Promise<ScrapedPage[]> {
   }
 }
 
-// ─── Step 2: Spin up WordPress via TasteWP (free, no API key needed) ──────────
-
-async function provisionWordPress(_businessName: string): Promise<WPCredentials> {
-  // TasteWP spins up a free WP site instantly via a simple GET request
-  const res = await fetch('https://tastewp.com/new/', {
-    method: 'GET',
-    redirect: 'follow',
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RankRebuild/1.0)' },
-    signal: AbortSignal.timeout(60000),
-  });
-
-  // TasteWP redirects to a URL like: https://tastewp.com/create/NMS/8.5/6.9.4/site-name/theme
-  // The actual WP site URL is embedded in the page or derived from the final URL
-  const finalUrl = res.url;
-
-  // Extract the site identifier from the redirect URL
-  // Format: https://tastewp.com/create/NMS/{php}/{wp}/{sitename}/{theme}
-  const siteNameMatch = finalUrl.match(/\/create\/[^/]+\/[^/]+\/[^/]+\/([^/]+)/);
-  if (!siteNameMatch) {
-    throw new Error(`TasteWP: could not parse site name from URL: ${finalUrl}`);
-  }
-
-  const siteName = siteNameMatch[1];
-  const siteUrl = `https://${siteName}.tastewp.com`;
-
-  // TasteWP auto-login credentials are always admin/admin for fresh sites
-  // The site needs a few seconds to boot up
-  await new Promise(resolve => setTimeout(resolve, 15000));
-
-  return {
-    site_url: siteUrl,
-    wp_username: 'admin',
-    app_password: 'admin',
-  };
-}
-
 // ─── Step 3: Rebuild content with Claude ─────────────────────────────────────
 
 async function rebuildPageWithClaude(page: ScrapedPage): Promise<string> {
@@ -317,56 +273,75 @@ export async function POST(req: Request) {
 
     await updateJob(admin, job_id, {
       scraped_pages: scrapedPages,
-      progress_message: `Found ${scrapedPages.length} page${scrapedPages.length !== 1 ? 's' : ''}. Spinning up WordPress...`,
+      progress_message: `Found ${scrapedPages.length} page${scrapedPages.length !== 1 ? 's' : ''}. Generating your preview site...`,
     });
 
-    // ── Step 2: Provision WordPress ────────────────────────────────────────
+    // ── Step 2: Provision WordPress (or generate static preview) ───────────
     const businessName = job.business_name || 'my-site';
-    const creds = await provisionWordPress(businessName);
 
     await updateJob(admin, job_id, {
       status: 'building',
-      wp_site_url: creds.site_url,
-      progress_message: 'Rebuilding your content with AI...',
+      progress_message: 'Building your new website with AI...',
     });
 
-    // ── Step 3 + 4: Rebuild and publish each page ─────────────────────────
-    for (let i = 0; i < scrapedPages.length; i++) {
-      const page = scrapedPages[i];
+    const wpSite = await provisionWordPressSite(businessName, scrapedPages, job_id);
+
+    await updateJob(admin, job_id, {
+      wp_site_url: wpSite.site_url,
+      progress_message: wpSite.is_preview
+        ? 'Preview site generated! Adding finishing touches...'
+        : 'WordPress is ready! Rebuilding your content with AI...',
+    });
+
+    // ── Step 3 + 4: Rebuild and publish each page (only for real WP sites) ──
+    if (!wpSite.is_preview) {
+      const creds: WPCredentials = {
+        site_url: wpSite.site_url,
+        wp_username: wpSite.wp_username,
+        app_password: wpSite.app_password,
+      };
+
+      for (let i = 0; i < scrapedPages.length; i++) {
+        const page = scrapedPages[i];
+        await updateJob(admin, job_id, {
+          progress_message: `Rebuilding page ${i + 1} of ${scrapedPages.length}: "${page.title || page.url}"`,
+        });
+
+        const rebuiltHtml = await rebuildPageWithClaude(page);
+        const isHome = i === 0;
+
+        try {
+          await createWPPage(creds, page.title || `Page ${i + 1}`, rebuiltHtml, isHome);
+        } catch {
+          // If WP REST fails, log and continue
+          console.warn(`[migration] page creation failed for ${page.url}`);
+        }
+      }
+
+      // ── Step 5: Upload images ────────────────────────────────────────────
       await updateJob(admin, job_id, {
-        progress_message: `Rebuilding page ${i + 1} of ${scrapedPages.length}: "${page.title || page.url}"`,
+        status: 'uploading',
+        progress_message: 'Uploading images to WordPress...',
       });
 
-      const rebuiltHtml = await rebuildPageWithClaude(page);
-      const isHome = i === 0;
-
-      try {
-        await createWPPage(creds, page.title || `Page ${i + 1}`, rebuiltHtml, isHome);
-      } catch {
-        // If WP REST fails (stub), log and continue
-        console.warn(`[migration] page creation failed for ${page.url} (stub WP?)`);
+      const allImages = scrapedPages.flatMap(p => p.images).slice(0, 30);
+      for (const imgUrl of allImages) {
+        await uploadImage(creds, imgUrl);
       }
     }
 
-    // ── Step 5: Upload images ──────────────────────────────────────────────
-    await updateJob(admin, job_id, {
-      status: 'uploading',
-      progress_message: 'Uploading images to WordPress...',
-    });
-
-    const allImages = scrapedPages.flatMap(p => p.images).slice(0, 30);
-    for (const imgUrl of allImages) {
-      await uploadImage(creds, imgUrl);
-    }
-
     // ── Step 6: Done ───────────────────────────────────────────────────────
+    const doneMessage = wpSite.is_preview
+      ? '✨ Your preview site is ready! Review it and we\'ll migrate to WordPress next.'
+      : 'Migration complete!';
+
     await updateJob(admin, job_id, {
       status: 'ready',
-      preview_url: creds.site_url,
-      progress_message: 'Migration complete!',
+      preview_url: wpSite.site_url,
+      progress_message: doneMessage,
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, is_preview: wpSite.is_preview ?? false });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     await updateJob(admin, job_id, {
