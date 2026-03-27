@@ -92,7 +92,7 @@ export async function generatePreviewSite(
   const allImages = scrapedPages.flatMap(p => p.images).filter(Boolean).slice(0, 10);
   const pageList = scrapedPages.map(p => p.title || p.url).filter(Boolean).slice(0, 10);
 
-  const prompt = `You are a world-class web designer. Create a complete, stunning, mobile-responsive single-page HTML website for "${businessName}".
+  const prompt = `You are a world-class web designer building a $10,000 custom website. Create a complete, stunning, mobile-responsive single-page HTML website for "${businessName}".
 
 SCRAPED CONTENT TO USE:
 - Main title: ${primaryPage.title || businessName}
@@ -103,52 +103,116 @@ SCRAPED CONTENT TO USE:
 ${allParagraphs.slice(0, 15).map((p, i) => `${i + 1}. ${p.substring(0, 200)}`).join('\n')}
 ${allImages.length > 0 ? `- Original images (use these as src): ${allImages.slice(0, 6).join(', ')}` : ''}
 
-DESIGN STYLE — match this exact aesthetic:
-- Deep dark navy background: #0a1628 for main bg, #0d3b6e for section accents
-- Teal accent color: #00bcd4 (borders, highlights, CTA buttons, hover states)
-- Gold accent: #f4a81d for special highlights and stars
-- White text on dark backgrounds, dark text on light cards
-- Font: 'Segoe UI', system-ui, sans-serif — clean and professional
-- Fixed navbar: rgba(10,22,40,0.92) with backdrop-filter blur, teal bottom border, height 70px
-- Hero: full viewport height, dark overlay on background image from Unsplash (use a relevant search term for the business), large bold white headline, teal subheadline, gold CTA button, scroll indicator
-- Sections alternate: dark (#0a1628) and slightly lighter (#0d2645)
-- Cards: dark bg with subtle teal border, hover lift effect (translateY(-6px) with box-shadow)
-- Section headers: small teal uppercase label above large white bold title
-- Buttons: teal background, white text, rounded, hover gold
-- Footer: very dark (#060e1a), teal accent borders
+EXACT DESIGN SYSTEM TO IMPLEMENT:
+CSS variables:
+  --ocean-deep: #051923;
+  --ocean-mid: #0a2d42;
+  --ocean-blue: #0a6aad;
+  --cyan: #00c8e0;
+  --aqua: #00f0e0;
+  --sand: #e8dfc9;
+  --coral: #ff5c3a;
+  --white: #f7f9fc;
+  --text: #e2eaf0;
+  --muted: #7a98ad;
+  --card-bg: rgba(10,45,66,0.72);
+  --border: rgba(0,200,224,0.18);
 
-REQUIRED SECTIONS (in order):
-1. Fixed nav with logo text + nav links (Home, About, Services, [business-specific page], Contact) + mobile hamburger
-2. Hero: full-height, background image from Unsplash (pick a great relevant photo URL), dark overlay, business name, tagline, CTA "Get Started" button, animated scroll arrow
-3. "Why Choose Us" / Features: 3-4 cards with SVG icons, titles, descriptions based on real content
-4. Services/Offerings: grid of service cards with real content from the scraped pages
-5. About section: split layout — compelling copy left, stats/highlights right
-6. Testimonials: 3 realistic testimonials with star ratings, names, realistic quotes based on business type
-7. Call-to-action banner: full-width teal/navy gradient, strong headline, button
-8. Contact: dark section, form (name, email, phone, message) + contact info sidebar
-9. Footer: logo, nav links, social icons (Instagram, Facebook, Twitter placeholders), copyright
+Typography:
+- Import from Google Fonts: Bebas Neue (display headlines), Outfit (body 300/400/500/600/700), DM Serif Display (italic accents)
+- Body font: 'Outfit', sans-serif
+- Hero headline: 'Bebas Neue' — very large (clamp(3rem, 10vw, 7rem)), letter-spacing 0.04em
+- Section titles: 'Bebas Neue' or 'Outfit' 700, white
+- Subheadings: 'DM Serif Display' italic for pull quotes or taglines
+
+Background:
+- body background: var(--ocean-deep) 
+- body::before: animated multi-layer radial gradient (position:fixed, inset:0, pointer-events:none, z-index:0):
+  radial-gradient(ellipse 80% 60% at 20% 80%, rgba(0,100,160,0.22) 0%, transparent 70%),
+  radial-gradient(ellipse 60% 40% at 80% 20%, rgba(0,200,224,0.12) 0%, transparent 60%),
+  radial-gradient(ellipse 100% 80% at 50% 110%, rgba(0,240,224,0.08) 0%, transparent 50%)
+
+Top bar (above nav):
+- background: rgba(5,25,35,0.95), border-bottom: 1px solid var(--border), padding: 8px 40px
+- Show phone/email links in cyan, "Book Now" pill button (cyan border, rounded-full)
+- Hide on mobile
+
+Sticky Nav (position:sticky, top:0, z-index:200):
+- background: rgba(5,25,35,0.96), backdrop-filter: blur(18px)
+- border-bottom: 1px solid var(--border), height: 70px, padding: 0 40px
+- Logo: business name in Bebas Neue, cyan color, 28px
+- Nav links: 14px Outfit 500, hover color var(--cyan) + background rgba(0,200,224,0.08), rounded-lg
+- CTA button: gradient(135deg, var(--ocean-blue), var(--cyan)), border-radius:25px, box-shadow:0 0 20px rgba(0,200,224,0.3)
+- Mobile: hamburger (3 lines), full-screen overlay menu
+
+Hero (min-height:90vh):
+- Full-screen background image (pick a gorgeous relevant Unsplash URL for the business type)
+- Dark overlay: linear-gradient(to bottom, rgba(5,25,35,0.7) 0%, rgba(5,25,35,0.5) 50%, rgba(5,25,35,0.85) 100%)
+- Centered content, text-align:center
+- Small tag above headline: border 1px cyan, cyan text, uppercase, 12px, rounded-full, padding 4px 16px
+- Main headline: Bebas Neue, massive, white, with key word in cyan
+- Subheading: Outfit 300, 20px, var(--muted), max-width 600px, margin auto
+- Two buttons: primary (coral gradient, bold) + secondary (transparent cyan border)
+- Scroll indicator: animated bouncing arrow at bottom
+
+Trust bar (below hero):
+- background: rgba(10,45,66,0.6), backdrop-filter: blur, border-top + border-bottom var(--border)
+- Row of 4-5 stats/trust items: big cyan number, small muted label (e.g. "500+ Students", "15+ Years", "5-Star Rating")
+- Dividers between items
+
+Sections (alternate background colors):
+- Section 1 bg: transparent (shows animated bg gradient)
+- Section 2 bg: rgba(10,45,66,0.4)
+- Section 3 bg: transparent
+- etc.
+- All sections: padding 100px 40px, max-width 1200px container, centered
+
+Section headers (each section):
+- Small label: cyan color, uppercase, 12px, letter-spacing 0.2em, with cyan line decorators ——
+- Main title: Bebas Neue or Outfit 700, 48px, white
+- Subtitle: Outfit 300, 18px, var(--muted)
+
+Cards (glassmorphism):
+- background: var(--card-bg), backdrop-filter: blur(12px)
+- border: 1px solid var(--border), border-radius: 20px, padding: 36px
+- hover: translateY(-8px), box-shadow: 0 20px 60px rgba(0,0,0,0.4), border-color: var(--cyan)
+- transition: all 0.35s ease
+
+REQUIRED SECTIONS:
+1. Top bar + sticky nav with CTA
+2. Hero: full-height, real Unsplash background, Bebas Neue headline, coral CTA + cyan secondary button
+3. Trust bar: 4-5 stats derived from business content
+4. Services/Courses: 3-column card grid with glassmorphism cards, real service content, coral "Learn More" links
+5. Featured highlight: full-width section with background image + overlay, big quote or headline
+6. About section: two-column — compelling copy left (with DM Serif italic pullquote), image/stats right
+7. Testimonials: 3 cards, star ratings (coral ★), realistic first-person quotes, name + role
+8. Call-to-action: full-width, coral gradient background, large Bebas Neue headline, white CTA button
+9. Contact: two-column — form left (name, email, phone, message, submit) + info right (address, phone, email, hours)
+10. Footer: dark (#020d14), logo, 3-column links, social icons row, copyright
 
 ANIMATIONS:
-- Scroll reveal: elements start opacity:0 translateY(40px), animate to visible on scroll (use IntersectionObserver)
-- Nav hides/shows on scroll (hide on scroll down, show on scroll up)
-- Smooth hover transitions on all cards and buttons
-- Hero text fade-in on load
+- IntersectionObserver scroll reveal: .reveal class → opacity:0 translateY(30px) → opacity:1 translateY(0), 0.6s ease
+- Staggered reveals on card grids (delay each card by 0.1s)
+- Hero content: keyframe fade-in-up on load
+- Nav: hide on scroll down (translateY(-100%)), show on scroll up
+- Stats counter animation: count up from 0 to value on scroll
 
-TECHNICAL REQUIREMENTS:
-- Pure HTML/CSS/vanilla JS — NO external JS frameworks or Tailwind CDN
-- All CSS inline in <style> tag — write proper custom CSS (not Tailwind classes)
-- Use CSS custom properties (--variables) for the color system
-- Mobile responsive with hamburger menu
-- Form shows inline "Thanks! We'll be in touch." success message on submit
-- Small dismissible banner at very top: background #0d3b6e, teal border-bottom, text "✨ Preview of your new website — powered by RankRebuild" with ✕ close button
+TECHNICAL:
+- Pure HTML/CSS/vanilla JS — NO frameworks, NO CDN JS libraries
+- Google Fonts via <link> in <head>
+- All CSS in <style> block with CSS custom properties
+- Mobile responsive: hamburger menu, single-column on mobile
+- Contact form: inline success message "Thanks! We'll be in touch within 24 hours. 🎉"
+- Preview banner at very top (before topbar): #051923 bg, cyan left-border, "✨ This is a preview of your new website — powered by RankRebuild" text with ✕ dismiss button
+- All elements have z-index > 0 to appear above the body::before gradient layer (which is z-index:0)
 
 CONTENT RULES:
 - Use ALL real scraped content — no lorem ipsum ever
-- Write compelling marketing copy based on the real business
-- Testimonials should sound authentic to the specific business type and location
-- Service descriptions should expand on the scraped content intelligently
+- Infer realistic stats from context (years in business, students trained, trips offered, etc.)
+- Testimonials must sound authentic, specific to the business location and type
+- Marketing copy should be compelling and conversion-focused
 
-Return ONLY the complete HTML document. No markdown fences, no explanation, just the HTML starting with <!DOCTYPE html>.`;
+Return ONLY the complete HTML. No markdown fences. No explanation. Start with <!DOCTYPE html>.`;
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
