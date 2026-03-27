@@ -150,35 +150,71 @@ ${rawHtmlSample.substring(0, 15000)}`
 
   const useTemplate = templateHtml.length > 1000;
 
+  // If we have the template, do surgical replacements instead of letting Claude rewrite it
+  if (useTemplate && extractedData) {
+    let adapted = templateHtml;
+
+    // Parse extracted data
+    let data: Record<string, unknown> = {};
+    try { data = JSON.parse(extractedData); } catch { /* use empty */ }
+
+    // Add preview banner after <body>
+    adapted = adapted.replace('<body>', '<body>\n<div id="rr-preview-banner" style="background:#051923;border-left:3px solid #00c8e0;padding:8px 20px;font-family:Outfit,sans-serif;font-size:13px;color:#00c8e0;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:9999">✨ This is a preview of your new website — powered by RankRebuild <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#7a98ad;cursor:pointer;font-size:18px">✕</button></div>');
+
+    // Business name replacements
+    adapted = adapted.replace(/3D Scuba/g, businessName);
+    adapted = adapted.replace(/3dscuba/gi, businessName.toLowerCase().replace(/\s+/g, ''));
+    adapted = adapted.replace(/<title>[^<]*<\/title>/, `<title>${primaryPage.title || businessName}</title>`);
+
+    // Phone
+    const phone = data.phone as string;
+    if (phone) {
+      adapted = adapted.replace(/\(704\)\s*209-2209/g, phone);
+      adapted = adapted.replace(/7042092209/g, phone.replace(/\D/g, ''));
+      adapted = adapted.replace(/tel:\d+/g, `tel:${phone.replace(/\D/g, '')}`);
+    }
+
+    // Address
+    const address = data.address as string;
+    if (address) {
+      adapted = adapted.replace(/403 S\. Salisbury Ave[^<]*/g, address);
+      adapted = adapted.replace(/Granite Quarry NC[^<,]*/g, '');
+    }
+
+    // Hours
+    const hours = data.hours as string;
+    if (hours) {
+      adapted = adapted.replace(/Mon-Fri:[^<]*/g, hours);
+    }
+
+    // Images - replace course/hero images with business images
+    const images = (data.images as string[]) || allImages;
+    if (images.length > 0) {
+      // Replace Unsplash or placeholder images
+      images.slice(0, 6).forEach((img, i) => {
+        if (i === 0) adapted = adapted.replace(/https:\/\/images\.unsplash\.com\/[^"'\s)]+/g, img);
+      });
+    }
+
+    // Upload and return
+    const filename = `preview/${jobId}.html`;
+    const blob = await put(filename, adapted, {
+      access: 'public',
+      contentType: 'text/html; charset=utf-8',
+      addRandomSuffix: false,
+    });
+    return blob.url;
+  }
+
   const prompt = useTemplate
-    ? `You are adapting a premium website template for a new business. The template below was built for "3D Scuba" — a scuba diving center in Charlotte, NC. Your job is to adapt it for "${businessName}" by replacing ALL 3D Scuba-specific content with the new business's content while keeping the EXACT same design, CSS, layout, animations, and structure.
+    ? `You are adapting a premium website template for "${businessName}". Keep the EXACT same CSS, animations, and structure. Only change text content, images, and links.
 
-NEW BUSINESS DATA:
-- Business name: ${businessName}
-- Title/tagline: ${primaryPage.title || businessName}
-- Description: ${primaryPage.meta_description || ''}
-- Pages: ${pageList.join(', ')}
-- Key headings: ${allHeadings.slice(0, 10).join(' | ')}
-- Content: ${allParagraphs.slice(0, 10).map(p => p.substring(0, 150)).join(' | ')}
-- Images to use: ${allImages.slice(0, 8).join(', ')}
-${extractedData ? `- Extracted data: ${extractedData}` : ''}
+DATA: ${extractedData || `name:${businessName}, headings:${allHeadings.slice(0,5).join('|')}`}
 
-ADAPTATION RULES:
-1. Keep ALL CSS exactly as-is — same colors, fonts, animations, layout
-2. Replace ALL text content (business name, tagline, services, courses, prices, contact info, testimonials, about text)
-3. Replace ALL images with the new business's images or relevant Unsplash photos
-4. Replace ALL links/hrefs with # or the new business's real links
-5. Update the page title, meta description
-6. Replace "3D Scuba", "scuba", "diving", "Charlotte, NC" with the new business's equivalents
-7. Adapt section names to fit the new business type (e.g. "Courses" → "Services" if not a diving business)
-8. Keep the preview banner: "✨ This is a preview of your new website — powered by RankRebuild"
-9. Remove the base64 logo — replace with the business name in Bebas Neue text
-10. Keep ALL JavaScript and animations exactly as-is
+TEMPLATE:
+${templateHtml.substring(0, 30000)}
 
-TEMPLATE HTML TO ADAPT:
-${templateHtml}
-
-Return ONLY the complete adapted HTML. Start with <!DOCTYPE html>. No markdown fences, no explanation.`
+Return ONLY the adapted HTML.`
 
     : `You are a world-class web designer. Create a complete, stunning website for "${businessName}".
 
