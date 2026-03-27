@@ -84,24 +84,35 @@ export async function generatePreviewSite(
     headings: [],
     paragraphs: [],
     images: [],
+    raw_html: '',
   };
 
   // Collect content from all pages
   const allHeadings = scrapedPages.flatMap(p => p.headings).slice(0, 20);
   const allParagraphs = scrapedPages.flatMap(p => p.paragraphs).slice(0, 30);
-  const allImages = scrapedPages.flatMap(p => p.images).filter(Boolean).slice(0, 10);
+  const allImages = scrapedPages.flatMap(p => p.images).filter(Boolean).slice(0, 15);
   const pageList = scrapedPages.map(p => p.title || p.url).filter(Boolean).slice(0, 10);
+  
+  // Pass raw HTML so Claude can extract real prices, products, images, links
+  const rawHtmlSample = scrapedPages
+    .slice(0, 3)
+    .map(p => p.raw_html?.substring(0, 15000) || '')
+    .join('\n\n--- NEXT PAGE ---\n\n')
+    .substring(0, 40000);
 
   const prompt = `You are a world-class web designer building a $10,000 custom website. Create a complete, stunning, mobile-responsive single-page HTML website for "${businessName}".
 
-SCRAPED CONTENT TO USE:
+SCRAPED CONTENT — EXTRACT EVERYTHING USEFUL:
+- Business name: ${businessName}
 - Main title: ${primaryPage.title || businessName}
 - Meta description: ${primaryPage.meta_description || ''}
-- Page sections found: ${pageList.join(', ')}
-- Key headings from site: ${allHeadings.slice(0, 12).join(' | ')}
-- Content excerpts:
-${allParagraphs.slice(0, 15).map((p, i) => `${i + 1}. ${p.substring(0, 200)}`).join('\n')}
-${allImages.length > 0 ? `- Original images (use these as src): ${allImages.slice(0, 6).join(', ')}` : ''}
+- Pages found: ${pageList.join(', ')}
+- Key headings: ${allHeadings.slice(0, 12).join(' | ')}
+- Content excerpts: ${allParagraphs.slice(0, 10).map((p, i) => `${i + 1}. ${p.substring(0, 150)}`).join(' | ')}
+- Known images (use these as real src URLs): ${allImages.join(', ')}
+
+RAW HTML FROM THEIR WEBSITE (extract real prices, services, course names, team members, phone numbers, addresses, hours, images, specific offerings — use ALL real data you find):
+${rawHtmlSample}
 
 EXACT DESIGN SYSTEM TO IMPLEMENT:
 CSS variables:
@@ -216,7 +227,7 @@ Return ONLY the complete HTML. No markdown fences. No explanation. Start with <!
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 16000,
+    max_tokens: 32000,
     messages: [{ role: 'user', content: prompt }],
   });
 
