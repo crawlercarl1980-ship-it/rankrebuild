@@ -253,11 +253,13 @@ CONTENT RULES:
 - Testimonials must sound authentic, specific to the business location and type
 - Marketing copy should be compelling and conversion-focused
 
+IMPORTANT: You have a token budget. Be complete but efficient — don't repeat yourself. The site MUST have a closing </body></html>. If you're running low on space, skip extra testimonials/cards rather than leaving the HTML unclosed.
+
 Return ONLY the complete HTML. No markdown fences. No explanation. Start with <!DOCTYPE html>.`;
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 20000,
+    max_tokens: 24000,
     messages: [{ role: 'user', content: prompt }],
   });
 
@@ -267,6 +269,13 @@ Return ONLY the complete HTML. No markdown fences. No explanation. Start with <!
   let html = content.text.trim();
   // Strip markdown fences if present
   html = html.replace(/^```(?:html)?\n?/, '').replace(/\n?```$/, '').trim();
+  
+  // Safety: if HTML was truncated (no closing tags), append them
+  if (!html.includes('</body>')) {
+    html += '\n</body>\n</html>';
+  } else if (!html.includes('</html>')) {
+    html += '\n</html>';
+  }
 
   // Upload to Vercel Blob
   const filename = `preview/${jobId}.html`;
