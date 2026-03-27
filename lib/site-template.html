@@ -1,0 +1,1652 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Scuba | Premier SDI/TDI Dive Center â€” Charlotte, NC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ocean-deep: #051923;
+    --ocean-mid: #0a2d42;
+    --ocean-blue: #0a6aad;
+    --cyan: #00c8e0;
+    --aqua: #00f0e0;
+    --sand: #e8dfc9;
+    --coral: #ff5c3a;
+    --white: #f7f9fc;
+    --text: #e2eaf0;
+    --muted: #7a98ad;
+    --card-bg: rgba(10,45,66,0.72);
+    --border: rgba(0,200,224,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--ocean-deep);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* â”€â”€ ANIMATED BACKGROUND â”€â”€ */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(0,100,160,0.22) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(0,200,224,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 80% at 50% 110%, rgba(0,240,224,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* â”€â”€ TOP BAR â”€â”€ */
+  .topbar {
+    background: rgba(5,25,35,0.95);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    font-size: 13px;
+    color: var(--muted);
+    position: relative;
+    z-index: 100;
+  }
+  .topbar a { color: var(--cyan); text-decoration: none; transition: color 0.2s; }
+  .topbar a:hover { color: var(--aqua); }
+  .topbar-contact { display: flex; gap: 28px; align-items: center; }
+  .topbar-right { display: flex; gap: 18px; align-items: center; }
+  .topbar-right a {
+    background: rgba(0,200,224,0.1);
+    border: 1px solid var(--border);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .topbar-right a:hover { background: rgba(0,200,224,0.25); }
+
+  /* â”€â”€ NAVBAR â”€â”€ */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: rgba(5,25,35,0.96);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 70px;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.4);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+  .logo img {
+    height: 48px;
+    width: auto;
+  }
+  .footer-about .logo img {
+    height: 42px;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+  }
+  .nav-links > li { position: relative; }
+  .nav-links > li > a, .nav-links > li > button {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 8px;
+    display: block;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-links > li > a:hover, .nav-links > li > button:hover {
+    color: var(--cyan);
+    background: rgba(0,200,224,0.08);
+  }
+
+  /* Dropdown */
+  .dropdown { position: relative; }
+  .dropdown-toggle::after {
+    content: 'â–¾';
+    margin-left: 4px;
+    font-size: 10px;
+    opacity: 0.7;
+  }
+  .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(8,32,48,0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 8px;
+    min-width: 220px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    z-index: 300;
+    list-style: none;
+  }
+  .dropdown:hover .dropdown-menu { display: block; }
+  .dropdown-menu li a {
+    display: block;
+    padding: 9px 16px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 13.5px;
+    border-radius: 8px;
+    transition: all 0.18s;
+  }
+  .dropdown-menu li a:hover {
+    background: rgba(0,200,224,0.12);
+    color: var(--cyan);
+    padding-left: 22px;
+  }
+
+  .nav-cta {
+    background: linear-gradient(135deg, var(--ocean-blue), var(--cyan)) !important;
+    color: white !important;
+    padding: 9px 22px !important;
+    border-radius: 25px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 20px rgba(0,200,224,0.3);
+    transition: all 0.2s !important;
+  }
+  .nav-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 25px rgba(0,200,224,0.5) !important;
+    background: linear-gradient(135deg, var(--cyan), var(--aqua)) !important;
+  }
+
+  /* â”€â”€ HERO â”€â”€ */
+  .hero {
+    position: relative;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 80px 40px;
+    text-align: center;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to bottom, rgba(5,25,35,0.3) 0%, rgba(5,25,35,0.65) 60%, var(--ocean-deep) 100%),
+      url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600&q=80') center/cover no-repeat;
+    z-index: 0;
+  }
+
+  /* Bubble animation */
+  .bubbles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+  .bubble {
+    position: absolute;
+    bottom: -20px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0,240,224,0.25);
+    border: 1px solid rgba(0,240,224,0.4);
+    animation: rise linear infinite;
+  }
+  @keyframes rise {
+    0% { bottom: -20px; opacity: 0; transform: translateX(0) scale(0.5); }
+    10% { opacity: 1; }
+    90% { opacity: 0.8; }
+    100% { bottom: 110%; opacity: 0; transform: translateX(30px) scale(1.2); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,200,224,0.12);
+    border: 1px solid rgba(0,200,224,0.3);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    font-weight: 600;
+    margin-bottom: 24px;
+    animation: fadeInUp 0.8s ease both;
+  }
+  .hero-badge::before { content: 'â­'; }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(58px, 9vw, 110px);
+    line-height: 0.92;
+    letter-spacing: 3px;
+    color: var(--white);
+    text-shadow: 0 0 60px rgba(0,200,224,0.2);
+    margin-bottom: 12px;
+    animation: fadeInUp 0.9s ease 0.1s both;
+  }
+  .hero h1 span {
+    color: transparent;
+    -webkit-text-stroke: 2px var(--cyan);
+    display: block;
+  }
+
+  .hero-tagline {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: clamp(20px, 2.5vw, 28px);
+    color: var(--cyan);
+    margin-bottom: 20px;
+    animation: fadeInUp 0.9s ease 0.2s both;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: rgba(226,234,240,0.8);
+    line-height: 1.7;
+    max-width: 520px;
+    margin-bottom: 40px;
+    animation: fadeInUp 0.9s ease 0.3s both;
+  }
+
+  .hero-deal {
+    background: linear-gradient(135deg, rgba(10,106,173,0.4), rgba(0,200,224,0.15));
+    border: 1px solid rgba(0,200,224,0.3);
+    border-radius: 16px;
+    padding: 20px 28px;
+    margin-bottom: 36px;
+    max-width: 480px;
+    width: 100%;
+    animation: fadeInUp 0.9s ease 0.4s both;
+  }
+  .hero-deal .deal-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .hero-deal .deal-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px;
+    color: var(--white);
+    line-height: 1;
+  }
+  .hero-deal .deal-price span { font-size: 20px; color: var(--cyan); }
+  .hero-deal .deal-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeInUp 0.9s ease 0.5s both;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--ocean-blue), var(--cyan));
+    color: white;
+    padding: 14px 34px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 0 30px rgba(0,200,224,0.35);
+    transition: all 0.25s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 35px rgba(0,200,224,0.55);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--white);
+    padding: 14px 34px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.25s;
+  }
+  .btn-outline:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: rgba(0,200,224,0.07);
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* â”€â”€ TRUST BAR â”€â”€ */
+  .trust-bar {
+    position: relative;
+    z-index: 2;
+    background: rgba(10,45,66,0.6);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 22px 40px;
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    flex-wrap: wrap;
+  }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .trust-item .icon { font-size: 22px; }
+  .trust-item strong { color: var(--white); display: block; font-size: 16px; }
+
+  /* â”€â”€ SECTION SHARED â”€â”€ */
+  section {
+    position: relative;
+    z-index: 2;
+  }
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 5vw, 56px);
+    color: var(--white);
+    line-height: 1.05;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+  .section-sub {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 50px;
+  }
+  .section-header { margin-bottom: 50px; }
+
+  /* â”€â”€ COURSES â”€â”€ */
+  .courses-section { padding: 100px 40px; }
+
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .course-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+    group: true;
+  }
+  .course-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(0,200,224,0.45);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35), 0 0 30px rgba(0,200,224,0.1);
+  }
+  .course-img {
+    height: 190px;
+    background: linear-gradient(135deg, var(--ocean-mid), var(--ocean-blue));
+    position: relative;
+    overflow: hidden;
+  }
+  .course-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s;
+  }
+  .course-card:hover .course-img img { transform: scale(1.07); }
+  .course-level {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(0,200,224,0.85);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .course-body { padding: 22px 24px; flex: 1; display: flex; flex-direction: column; }
+  .course-body h3 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--white);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .course-body p { font-size: 13.5px; color: var(--muted); line-height: 1.6; flex: 1; margin-bottom: 18px; }
+  .course-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--cyan);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: gap 0.2s;
+  }
+  .course-card:hover .course-link { gap: 10px; }
+
+  /* â”€â”€ TRIPS â”€â”€ */
+  .trips-section { padding: 80px 40px; background: rgba(0,0,0,0.25); }
+
+  .trips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 28px;
+  }
+
+  .trip-card {
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    height: 360px;
+    text-decoration: none;
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    transition: transform 0.3s;
+  }
+  .trip-card:hover { transform: translateY(-5px); }
+  .trip-card img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s;
+  }
+  .trip-card:hover img { transform: scale(1.06); }
+  .trip-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(5,25,35,0.9) 0%, rgba(5,25,35,0.3) 50%, transparent 100%);
+  }
+  .trip-info {
+    position: relative;
+    z-index: 1;
+    padding: 26px 24px;
+  }
+  .trip-info .status {
+    display: inline-block;
+    background: var(--coral);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .trip-info .status.open { background: #22c55e; }
+  .trip-info .status.new { background: var(--ocean-blue); }
+  .trip-info h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .trip-info p { font-size: 13px; color: rgba(226,234,240,0.75); }
+
+  /* â”€â”€ SERVICES â”€â”€ */
+  .services-section { padding: 80px 40px; }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .service-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 30px 24px;
+    text-align: center;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+  }
+  .service-card:hover {
+    border-color: rgba(0,200,224,0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+  }
+  .service-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--ocean-blue), var(--cyan));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 16px;
+    box-shadow: 0 0 20px rgba(0,200,224,0.2);
+  }
+  .service-card h3 { font-size: 17px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+  .service-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* â”€â”€ DIVESHOP360 STORE â”€â”€ */
+  .store-section { padding: 80px 40px; background: rgba(0,0,0,0.2); }
+  .store-frame-wrap {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    min-height: 600px;
+    position: relative;
+  }
+  .store-frame-wrap iframe {
+    width: 100%;
+    min-height: 600px;
+    border: none;
+    display: block;
+  }
+  .store-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .store-tab {
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .store-tab:hover, .store-tab.active {
+    background: linear-gradient(135deg, var(--ocean-blue), var(--cyan));
+    color: white;
+    border-color: transparent;
+  }
+  .store-direct-links {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .store-link-card {
+    background: rgba(10,45,66,0.6);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .store-link-card:hover {
+    border-color: rgba(0,200,224,0.4);
+    background: rgba(10,106,173,0.25);
+    transform: translateY(-2px);
+  }
+  .store-link-card .sicon { font-size: 28px; }
+  .store-link-card span { font-weight: 600; font-size: 14px; color: var(--white); display: block; }
+  .store-link-card small { color: var(--muted); font-size: 12px; }
+
+  /* â”€â”€ TEAM â”€â”€ */
+  .team-section { padding: 80px 40px; }
+  .team-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    max-width: 480px;
+    transition: all 0.3s;
+  }
+  .team-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
+  .team-top {
+    background: linear-gradient(135deg, var(--ocean-mid), var(--ocean-blue));
+    padding: 36px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .team-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(0,200,224,0.2);
+    border: 3px solid rgba(0,200,224,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .team-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .team-meta h3 { font-size: 22px; font-weight: 700; color: var(--white); }
+  .team-meta .role { color: var(--cyan); font-size: 13px; font-weight: 600; margin: 3px 0; }
+  .team-meta .cert { font-size: 12px; color: var(--muted); }
+  .team-body { padding: 28px 36px; }
+  .team-body p { font-size: 14.5px; color: var(--muted); line-height: 1.75; }
+  .team-specialties {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .spec-tag {
+    background: rgba(0,200,224,0.1);
+    border: 1px solid rgba(0,200,224,0.2);
+    color: var(--cyan);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  /* â”€â”€ HOURS / CONTACT â”€â”€ */
+  .contact-section { padding: 80px 40px; }
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+  @media (max-width: 768px) { .contact-grid { grid-template-columns: 1fr; } }
+
+  .info-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    backdrop-filter: blur(10px);
+  }
+  .info-card h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1.5px;
+    color: var(--white);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hours-list { list-style: none; }
+  .hours-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 14px;
+  }
+  .hours-list li:last-child { border-bottom: none; }
+  .hours-list .day { color: var(--muted); }
+  .hours-list .time { color: var(--white); font-weight: 500; }
+  .hours-list .closed { color: var(--coral); }
+
+  .contact-form { display: flex; flex-direction: column; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .form-group input, .form-group textarea {
+    background: rgba(10,45,66,0.5);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group textarea:focus {
+    border-color: rgba(0,200,224,0.5);
+    box-shadow: 0 0 0 3px rgba(0,200,224,0.08);
+  }
+  .form-group textarea { resize: vertical; min-height: 100px; }
+
+  /* â”€â”€ NEWSLETTER â”€â”€ */
+  .newsletter-section {
+    padding: 70px 40px;
+    background: linear-gradient(135deg, rgba(10,106,173,0.25), rgba(0,200,224,0.1));
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  .newsletter-form {
+    display: flex;
+    gap: 12px;
+    max-width: 480px;
+    margin: 30px auto 0;
+  }
+  .newsletter-form input {
+    flex: 1;
+    background: rgba(10,45,66,0.6);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 13px 22px;
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .newsletter-form input:focus { border-color: var(--cyan); }
+  .newsletter-form input::placeholder { color: var(--muted); }
+
+  /* â”€â”€ FOOTER â”€â”€ */
+  footer {
+    position: relative;
+    z-index: 2;
+    background: rgba(5,25,35,0.98);
+    border-top: 1px solid var(--border);
+    padding: 60px 40px 30px;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 50px;
+  }
+  @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .footer-grid { grid-template-columns: 1fr; } }
+
+  .footer-about p {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin: 16px 0 24px;
+  }
+  .footer-social { display: flex; gap: 12px; }
+  .social-btn {
+    width: 38px;
+    height: 38px;
+    background: rgba(0,200,224,0.1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+  .social-btn:hover { background: rgba(0,200,224,0.25); color: var(--cyan); border-color: rgba(0,200,224,0.4); }
+
+  .footer-col h4 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--white);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col ul li { margin-bottom: 10px; }
+  .footer-col ul li a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13.5px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .footer-col ul li a::before { content: 'â€º'; color: var(--cyan); font-size: 16px; }
+  .footer-col ul li a:hover { color: var(--cyan); }
+
+  .footer-bottom {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer-bottom p { font-size: 13px; color: var(--muted); }
+  .footer-bottom a { color: var(--cyan); text-decoration: none; }
+
+  /* â”€â”€ SDI BADGE â”€â”€ */
+  .sdi-badge-section {
+    padding: 40px 40px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    background: rgba(5,25,35,0.6);
+  }
+  .sdi-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+  }
+  .sdi-badge .badge-icon { font-size: 24px; }
+
+  /* â”€â”€ NOTICE BANNER â”€â”€ */
+  .notice-banner {
+    background: linear-gradient(135deg, rgba(255,92,58,0.2), rgba(255,92,58,0.08));
+    border: 1px solid rgba(255,92,58,0.3);
+    border-radius: 12px;
+    padding: 14px 22px;
+    margin-bottom: 30px;
+    font-size: 13.5px;
+    color: rgba(255,200,180,0.9);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* â”€â”€ SHARK â”€â”€ */
+  #shark-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+    overflow: hidden;
+  }
+  #shark {
+    position: absolute;
+    width: 280px;
+    height: auto;
+    opacity: 0;
+    filter: drop-shadow(0 6px 18px rgba(0,80,140,0.5)) invert(0);
+    transition: opacity 0.7s ease;
+    will-change: transform;
+  }
+  #shark.visible { opacity: 1; }
+
+  @keyframes bubbleRise {
+    0%   { opacity: 0.9; transform: translateY(0) scale(1); }
+    100% { opacity: 0;   transform: translateY(-22px) scale(1.5); }
+  }
+  .shark-bubble { animation: bubbleRise 1.6s ease-in infinite; }
+  .sb2 { animation-delay: 0.55s; }
+  .sb3 { animation-delay: 1.1s; }
+
+
+  @media (max-width: 768px) {
+    nav, .topbar { padding: 0 20px; }
+    .nav-links { display: none; }
+    .hero, .courses-section, .trips-section, .services-section, .store-section,
+    .team-section, .contact-section, .newsletter-section, footer { padding-left: 20px; padding-right: 20px; }
+    .trust-bar { gap: 20px; padding: 20px; }
+    nav { height: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-contact">
+    <a href="tel:7042092209">ðŸ“ž (704) 209-2209</a>
+    <a href="/cdn-cgi/l/email-protection#9df4f3eee9efe8fee9f2efddaed9cefee8fffcb3fef2f0">âœ‰ <span class="__cf_email__" data-cfemail="1f76716c6b6d6a7c6b706d5f2c5b4c7c6a7d7e317c7072">[email&#160;protected]</span></a>
+  </div>
+  <div class="topbar-right">
+    <a href="https://3dscuba.com/signin">Sign In</a>
+    <a href="https://3dscuba.com/createAccount">Register</a>
+    <a href="https://3dscuba.com/cart">ðŸ›’ Cart (0)</a>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">
+    <img src="LOGO_PLACEHOLDER" alt="3D Scuba" style="height:44px;width:auto;">
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#team">Our Team</a></li>
+    <li class="dropdown">
+      <button class="dropdown-toggle">Courses</button>
+      <ul class="dropdown-menu">
+        <li><a href="https://3dscuba.com/calendar/register/63923349-79f4-4949-a848-4580ac1f" target="_blank">Scuba Diver Courses</a></li>
+        <li><a href="https://3dscuba.com/calendar/register/63923ac1-2104-4127-a0b9-4ac4ac1f" target="_blank">Specialty Courses</a></li>
+        <li><a href="https://3dscuba.com/calendar/register/639247bd-ed5c-48df-a96e-4aa7ac1f" target="_blank">Professional Courses</a></li>
+        <li><a href="https://3dscuba.com/calendar/register/63923356-50bc-4b6c-af74-453eac1f" target="_blank">Popular TDI Courses</a></li>
+        <li><a href="https://3dscuba.com/more-tdi-courses" target="_blank">More TDI Courses</a></li>
+        <li><a href="https://3dscuba.com/calendar/register/6397b47e-fe40-417b-bc4c-415bac1f" target="_blank">FRTI</a></li>
+      </ul>
+    </li>
+    <li><a href="https://3dscuba.dive360.biz/trips" target="_blank">Trips</a></li>
+    <li><a href="#store">Shop</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="https://3dscuba.com/products/gift_certificate" target="_blank" class="nav-cta">Gift Certificates</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="bubbles" id="bubbles"></div>
+  <div class="hero-content">
+    <div class="hero-badge">5 Star SDI/TDI/FRTI Professional Development Center</div>
+    <h1>LIVE IT <span>LIVE!</span></h1>
+    <div class="hero-tagline">See the underwater world in 3D</div>
+    <p class="hero-sub">
+      Welcome to 3D Scuba â€” a premier dive center in Charlotte, NC. Stop watching the ocean on a screen
+      and come experience it for yourself. We'll guide you every step of the way.
+    </p>
+
+    <div class="hero-deal">
+      <div class="deal-label">ðŸ”¥ 2026 Package Deal â€” New & Returning Divers</div>
+      <div class="deal-price"><span>$</span>899<span>.00</span></div>
+      <div class="deal-desc">
+        Includes eLearning Â· Confined water training Â· Open water dives Â· Over $400 in gear<br>
+        <em style="color:rgba(255,255,255,0.45)">*Excludes $30 NCPDRA quarry fee Â· Upgrades available Â· Call for gear details</em>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <a href="https://3dscuba.com/calendar/register/63923349-79f4-4949-a848-4580ac1f" target="_blank" class="btn-primary">ðŸ¤¿ Enroll Now</a>
+      <a href="#courses" class="btn-outline">View All Courses â†’</a>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust-bar">
+  <div class="trust-item">
+    <span class="icon">â­</span>
+    <div><strong>SDI/TDI 5-Star</strong> Certified Center</div>
+  </div>
+  <div class="trust-item">
+    <span class="icon">ðŸŽ–ï¸</span>
+    <div><strong>Navy Veteran</strong> Owned & Operated</div>
+  </div>
+  <div class="trust-item">
+    <span class="icon">ðŸŒŠ</span>
+    <div><strong>Open Water &amp; Pool</strong> Training Available</div>
+  </div>
+  <div class="trust-item">
+    <span class="icon">ðŸ›’</span>
+    <div><strong>Full Gear Shop</strong> Top Brands</div>
+  </div>
+  <div class="trust-item">
+    <span class="icon">âœˆï¸</span>
+    <div><strong>Group Dive Trips</strong> Worldwide</div>
+  </div>
+</div>
+
+<!-- COURSES -->
+<section class="courses-section" id="courses">
+  <div class="section-header">
+    <div class="section-label">Get Certified</div>
+    <h2 class="section-title">Popular Courses</h2>
+    <p class="section-sub">From your first breath underwater to technical diving mastery â€” we have a course for every level.</p>
+  </div>
+
+  <div class="courses-grid">
+    <a href="https://3dscuba.com/courses/scuba-discovery" target="_blank" class="course-card">
+      <div class="course-img">
+        <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/8790015621_1670525999_3545607.jpg" alt="Scuba Discovery" onerror="this.style.display='none'">
+        <div class="course-level">Beginner</div>
+      </div>
+      <div class="course-body">
+        <h3>Scuba Discovery</h3>
+        <p>Your first taste of scuba diving in a safe, controlled environment. No experience needed â€” just curiosity.</p>
+        <span class="course-link">Register â€º</span>
+      </div>
+    </a>
+
+    <a href="https://3dscuba.com/courses/ow-scuba-diver" target="_blank" class="course-card">
+      <div class="course-img">
+        <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/1804893653_1671074699_3545607.jpg" alt="Open Water" onerror="this.style.display='none'">
+        <div class="course-level">Beginner</div>
+      </div>
+      <div class="course-body">
+        <h3>Initial Open Water Scuba Diver</h3>
+        <p>Earn your open water certification. Includes eLearning, pool sessions, and real open water dives.</p>
+        <span class="course-link">Register â€º</span>
+      </div>
+    </a>
+
+    <a href="https://3dscuba.com/courses/rescue-diver" target="_blank" class="course-card">
+      <div class="course-img">
+        <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/1525292106_1670527485_3545607.jpg" alt="Rescue Diver" onerror="this.style.display='none'">
+        <div class="course-level">Advanced</div>
+      </div>
+      <div class="course-body">
+        <h3>Rescue Diver</h3>
+        <p>Develop the skills to prevent and manage problems in the water, both for yourself and others.</p>
+        <span class="course-link">Register â€º</span>
+      </div>
+    </a>
+
+    <a href="https://3dscuba.com/courses/computer-nitrox" target="_blank" class="course-card">
+      <div class="course-img">
+        <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/8413053228_1670528919_3545607.jpg" alt="Nitrox" onerror="this.style.display='none'">
+        <div class="course-level">Specialty</div>
+      </div>
+      <div class="course-body">
+        <h3>Computer Nitrox</h3>
+        <p>Extend your bottom time and reduce surface intervals with enriched air â€” a must for serious divers.</p>
+        <span class="course-link">Register â€º</span>
+      </div>
+    </a>
+
+    <a href="https://3dscuba.com/courses/sdi-divemaster" target="_blank" class="course-card">
+      <div class="course-img">
+        <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/719965514_1670531040_3545607.jpg" alt="Divemaster" onerror="this.style.display='none'">
+        <div class="course-level">Professional</div>
+      </div>
+      <div class="course-body">
+        <h3>SDI Divemaster</h3>
+        <p>Turn your passion into a profession. Become a certified dive leader with SDI's respected program.</p>
+        <span class="course-link">Register â€º</span>
+      </div>
+    </a>
+
+    <a href="https://3dscuba.com/courses/intro-to-tech" target="_blank" class="course-card">
+      <div class="course-img">
+        <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/2158721316_1670531826_3545607.jpg" alt="Intro to Tech" onerror="this.style.display='none'">
+        <div class="course-level">Technical</div>
+      </div>
+      <div class="course-body">
+        <h3>Intro to Tech Diving</h3>
+        <p>The gateway to the technical diving world. Learn TDI fundamentals with our experienced instructor team.</p>
+        <span class="course-link">Register â€º</span>
+      </div>
+    </a>
+  </div>
+
+  <div style="text-align:center; margin-top:40px;">
+    <a href="https://3dscuba.com/calendar/register/63923349-79f4-4949-a848-4580ac1f" target="_blank" class="btn-primary">View Full Course Calendar â†’</a>
+  </div>
+</section>
+
+<!-- TRIPS -->
+<section class="trips-section" id="trips">
+  <div class="section-header">
+    <div class="section-label">Explore With Us</div>
+    <h2 class="section-title">Upcoming Dive Trips</h2>
+    <p class="section-sub">Join the 3D Scuba crew on unforgettable underwater adventures around the world.</p>
+  </div>
+
+  <div class="trips-grid">
+    <a href="https://3dscuba.com/trips/turquoise-bay-roatan-honduras" target="_blank" class="trip-card">
+      <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/6325767560_1694816557_3545607.jpg" alt="Roatan Honduras" onerror="this.src='https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=600'">
+      <div class="trip-info">
+        <div class="status">Sold Out</div>
+        <h3>Roatan, Honduras</h3>
+        <p>Turquoise Bay â€” crystal clear reefs &amp; stunning biodiversity</p>
+      </div>
+    </a>
+
+    <a href="https://3dscuba.com/trips/dive-the-georgia-aquarium-with-3d-scuba-1" target="_blank" class="trip-card">
+      <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/1385095340_1758382431_3545607.jpg" alt="Georgia Aquarium" onerror="this.src='https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=600'">
+      <div class="trip-info">
+        <div class="status">Sold Out</div>
+        <h3>Georgia Aquarium Dive</h3>
+        <p>Dive alongside whale sharks inside the world's largest aquarium</p>
+      </div>
+    </a>
+
+    <a href="https://3dscuba.com/trips/curacao" target="_blank" class="trip-card">
+      <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/3902951545_1760013269_3545607.jpg" alt="Curacao" onerror="this.src='https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=600'">
+      <div class="trip-info">
+        <div class="status open">Open</div>
+        <h3>CuraÃ§ao</h3>
+        <p>Vibrant reefs, shipwrecks, and warm turquoise waters in the Caribbean</p>
+      </div>
+    </a>
+
+    <a href="https://3dscuba.com/trips/tulum-cenotes" target="_blank" class="trip-card">
+      <img src="https://imgds360live.s3.amazonaws.com/storefront/3545607/5084825784_1760024817_3545607.jpg" alt="Tulum Cenotes" onerror="this.src='https://images.unsplash.com/photo-1568454537842-d933259bb258?w=600'">
+      <div class="trip-info">
+        <div class="status new">New â˜…</div>
+        <h3>Tulum Cenotes</h3>
+        <p>Magical underwater cavern diving in Mexico's legendary freshwater sinkholes</p>
+      </div>
+    </a>
+  </div>
+
+  <div style="text-align:center; margin-top:40px;">
+    <a href="https://3dscuba.dive360.biz/trips" target="_blank" class="btn-primary">View All Trips â†’</a>
+  </div>
+</section>
+
+<!-- SHARK -->
+<div id="shark-container" aria-hidden="true">
+  <img id="shark" src="LOGO_PLACEHOLDER" alt="shark">
+</div>
+
+<!-- SHOP (DiveShop360 Integration) -->
+<section class="store-section" id="store">
+  <div class="section-header">
+    <div class="section-label">DiveShop360 Powered Store</div>
+    <h2 class="section-title">Gear & Merchandise</h2>
+    <p class="section-sub">Shop top brands, classes, gift certificates, and more â€” all powered by DiveShop360.</p>
+  </div>
+
+  <div class="store-frame-wrap">
+    <div class="store-tabs">
+      <a href="https://3dscuba.com/products" target="_blank" class="store-tab active">All Products</a>
+      <a href="https://3dscuba.com/calendar/register/63923349-79f4-4949-a848-4580ac1f" target="_blank" class="store-tab">Scuba Courses</a>
+      <a href="https://3dscuba.com/calendar/register/63923ac1-2104-4127-a0b9-4ac4ac1f" target="_blank" class="store-tab">Specialty Courses</a>
+      <a href="https://3dscuba.com/calendar/register/639247bd-ed5c-48df-a96e-4aa7ac1f" target="_blank" class="store-tab">Pro Courses</a>
+      <a href="https://3dscuba.dive360.biz/trips" target="_blank" class="store-tab">Dive Trips</a>
+      <a href="https://3dscuba.com/products/gift_certificate" target="_blank" class="store-tab">ðŸŽ Gift Certs</a>
+    </div>
+
+    <div class="store-direct-links">
+      <a href="https://3dscuba.com/calendar/register/63923349-79f4-4949-a848-4580ac1f" target="_blank" class="store-link-card">
+        <span class="sicon">ðŸ¤¿</span>
+        <div>
+          <span>Scuba Diver Courses</span>
+          <small>Register &amp; enroll online</small>
+        </div>
+      </a>
+      <a href="https://3dscuba.com/calendar/register/63923ac1-2104-4127-a0b9-4ac4ac1f" target="_blank" class="store-link-card">
+        <span class="sicon">ðŸŒŠ</span>
+        <div>
+          <span>Specialty Courses</span>
+          <small>Nitrox, Nav, Wreck &amp; more</small>
+        </div>
+      </a>
+      <a href="https://3dscuba.com/calendar/register/639247bd-ed5c-48df-a96e-4aa7ac1f" target="_blank" class="store-link-card">
+        <span class="sicon">ðŸŽ“</span>
+        <div>
+          <span>Professional Courses</span>
+          <small>Divemaster &amp; Instructor</small>
+        </div>
+      </a>
+      <a href="https://3dscuba.com/calendar/register/63923356-50bc-4b6c-af74-453eac1f" target="_blank" class="store-link-card">
+        <span class="sicon">âš™ï¸</span>
+        <div>
+          <span>TDI Technical Courses</span>
+          <small>Advanced &amp; tech diving</small>
+        </div>
+      </a>
+      <a href="https://3dscuba.dive360.biz/trips" target="_blank" class="store-link-card">
+        <span class="sicon">âœˆï¸</span>
+        <div>
+          <span>Dive Trips</span>
+          <small>Book group travel</small>
+        </div>
+      </a>
+      <a href="https://3dscuba.com/rentals" target="_blank" class="store-link-card">
+        <span class="sicon">ðŸ§°</span>
+        <div>
+          <span>Rentals &amp; Services</span>
+          <small>Equipment &amp; fills</small>
+        </div>
+      </a>
+      <a href="https://3dscuba.com/products/gift_certificate" target="_blank" class="store-link-card">
+        <span class="sicon">ðŸŽ</span>
+        <div>
+          <span>Gift Certificates</span>
+          <small>Perfect for any diver</small>
+        </div>
+      </a>
+      <a href="https://3dscuba.com/cart" target="_blank" class="store-link-card">
+        <span class="sicon">ðŸ›’</span>
+        <div>
+          <span>View My Cart</span>
+          <small>DiveShop360 checkout</small>
+        </div>
+      </a>
+    </div>
+
+    <div style="padding: 0 20px 24px; text-align: center;">
+      <p style="color: var(--muted); font-size: 13px; margin-bottom: 14px;">
+        Our full product catalog, checkout, and account management is powered by <strong style="color:var(--cyan)">DiveShop360</strong>.
+        Click any item above or below to shop directly on our secure store.
+      </p>
+      <a href="https://3dscuba.com/products" target="_blank" class="btn-primary">Browse Full Store â†’</a>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services-section" id="services">
+  <div class="section-header">
+    <div class="section-label">What We Offer</div>
+    <h2 class="section-title">Services</h2>
+    <p class="section-sub">Everything you need to dive safely, comfortably, and confidently in one place.</p>
+  </div>
+
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon">ðŸ¤¿</div>
+      <h3>Equipment Rentals</h3>
+      <p>Full gear rental available for students and certified divers. Top-quality maintained equipment.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">ðŸ’¨</div>
+      <h3>Air &amp; Nitrox Fills</h3>
+      <p>High-pressure fills for scuba cylinders. Standard air and enriched air nitrox available.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">ðŸ”§</div>
+      <h3>Regulator Service</h3>
+      <p>Factory-trained technicians service and rebuild most major brands. Bring your gear to us.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">ðŸŽ“</div>
+      <h3>Private Instruction</h3>
+      <p>One-on-one lessons tailored to your pace, schedule, and learning style with Devan.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">ðŸŠ</div>
+      <h3>Pool Sessions</h3>
+      <p>Confined water training in a safe pool environment for new students and skill refreshers.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">ðŸŽ</div>
+      <h3>Gift Certificates</h3>
+      <p>Give the gift of adventure. Gift certificates available for courses, gear, and trips.</p>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top:40px;">
+    <a href="https://3dscuba.com/rentals" target="_blank" class="btn-outline">View All Services â†’</a>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section class="team-section" id="team">
+  <div class="section-header">
+    <div class="section-label">The People Behind the Bubbles</div>
+    <h2 class="section-title">Our Team</h2>
+    <p class="section-sub">Meet the experienced, passionate instructors who will guide your underwater journey.</p>
+  </div>
+
+  <div class="team-card">
+    <div class="team-top">
+      <div class="team-avatar">ðŸ¤¿</div>
+      <div class="team-meta">
+        <h3>Devan Simmerson</h3>
+        <div class="role">Owner &amp; Head Instructor</div>
+        <div class="cert">SDI Instructor #26499</div>
+      </div>
+    </div>
+    <div class="team-body">
+      <p>
+        A Submarine Navy veteran, Devan discovered his passion for scuba diving in 2013. With over 35 years
+        in the Nuclear Industry, he brings a deep and genuine safety culture to every dive. He is driven to help
+        people learn and safely enjoy the underwater world.
+      </p>
+      <div class="team-specialties">
+        <span class="spec-tag">Advanced Buoyancy</span>
+        <span class="spec-tag">Deep Diving</span>
+        <span class="spec-tag">Wreck Diving</span>
+        <span class="spec-tag">Sidemount</span>
+        <span class="spec-tag">Night Diving</span>
+        <span class="spec-tag">Solo Diving</span>
+        <span class="spec-tag">Search &amp; Recovery</span>
+        <span class="spec-tag">TDI Intro to Tech</span>
+        <span class="spec-tag">Full Face Mask</span>
+        <span class="spec-tag">SDI Computer Nitrox</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:30px;">
+    <a href="https://3dscuba.com/our-team" target="_blank" class="btn-outline">Meet the Full Team â†’</a>
+  </div>
+</section>
+
+<!-- CONTACT / HOURS -->
+<section class="contact-section" id="contact">
+  <div class="section-header">
+    <div class="section-label">Get In Touch</div>
+    <h2 class="section-title">Contact &amp; Hours</h2>
+  </div>
+
+  <div class="notice-banner">
+    âš ï¸ <strong>NCPDRA Members:</strong> It is time to renew or sign up for your NCPDRA membership!
+  </div>
+
+  <div class="contact-grid">
+    <div class="info-card">
+      <h3>ðŸ• Store Hours</h3>
+      <p style="font-size:12px; color:var(--coral); margin-bottom:16px; font-weight:600; letter-spacing:1px; text-transform:uppercase;">Winter Hours</p>
+      <ul class="hours-list">
+        <li><span class="day">Monday</span><span class="time closed">Closed</span></li>
+        <li><span class="day">Tuesday</span><span class="time closed">Closed</span></li>
+        <li><span class="day">Wednesday</span><span class="time">12:00 PM â€“ 5:00 PM</span></li>
+        <li><span class="day">Thursday</span><span class="time">12:00 PM â€“ 5:00 PM</span></li>
+        <li><span class="day">Friday</span><span class="time">9:00 AM â€“ 5:00 PM</span></li>
+        <li><span class="day">Saturday</span><span class="time">9:00 AM â€“ 5:00 PM</span></li>
+        <li><span class="day">Sunday</span><span class="time">By Appointment</span></li>
+        <li><span class="day">Dec 25</span><span class="time closed">Closed</span></li>
+      </ul>
+      <div style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
+        <a href="tel:7042092209" style="color:var(--cyan); text-decoration:none; font-size:15px; font-weight:600;">ðŸ“ž (704) 209-2209</a>
+        <a href="/cdn-cgi/l/email-protection#94fdfae7e0e6e1f7e0fbe6d4a7d0c7f7e1f6f5baf7fbf9" style="color:var(--cyan); text-decoration:none; font-size:15px; font-weight:600;">âœ‰ <span class="__cf_email__" data-cfemail="274e49545355524453485567146374445245460944484a">[email&#160;protected]</span></a>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3>ðŸ’¬ Send a Message</h3>
+      <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent! We\'ll be in touch soon.');">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" placeholder="Your full name" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea placeholder="How can we help you?"></textarea>
+        </div>
+        <button type="submit" class="btn-primary" style="border:none;cursor:pointer;font-family:'Outfit',sans-serif;">Send Message â†’</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter-section">
+  <div class="section-label">Stay in the Loop</div>
+  <h2 class="section-title">Join Our Newsletter</h2>
+  <p class="section-sub" style="margin: 0 auto 0;">Get the latest news, trip announcements, and exclusive discounts straight to your inbox.</p>
+  <div class="newsletter-form">
+    <input type="email" placeholder="Enter your email address">
+    <button class="btn-primary" onclick="alert('Thanks for subscribing!')">Subscribe</button>
+  </div>
+</section>
+
+<!-- SDI BADGE BAR -->
+<div class="sdi-badge-section">
+  <div class="sdi-badge"><span class="badge-icon">ðŸ…</span> SDI 5-Star Dive Center</div>
+  <div class="sdi-badge"><span class="badge-icon">âš¡</span> TDI Technical Dive Center</div>
+  <div class="sdi-badge"><span class="badge-icon">ðŸš‘</span> FRTI Professional Development Center</div>
+  <div class="sdi-badge"><span class="badge-icon">ðŸŸ</span> North Carolina's Premier Dive Shop</div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-about">
+      <a href="#" class="logo">
+        <img src="LOGO_PLACEHOLDER" alt="3D Scuba" style="height:44px;width:auto;">
+      </a>
+      <p>
+        A premier 5-Star SDI/TDI/FRTI Professional Development Center in North Carolina.
+        We are passionate about sharing the underwater world safely and unforgettably.
+      </p>
+      <div class="footer-social">
+        <a href="#" class="social-btn">ðŸ“˜</a>
+        <a href="#" class="social-btn">ðŸ“¸</a>
+        <a href="#" class="social-btn">ðŸŽ¥</a>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Courses</h4>
+      <ul>
+        <li><a href="https://3dscuba.com/calendar/register/63923349-79f4-4949-a848-4580ac1f" target="_blank">Scuba Diver Courses</a></li>
+        <li><a href="https://3dscuba.com/calendar/register/63923ac1-2104-4127-a0b9-4ac4ac1f" target="_blank">Specialty Courses</a></li>
+        <li><a href="https://3dscuba.com/calendar/register/639247bd-ed5c-48df-a96e-4aa7ac1f" target="_blank">Professional Courses</a></li>
+        <li><a href="https://3dscuba.com/calendar/register/63923356-50bc-4b6c-af74-453eac1f" target="_blank">TDI Courses</a></li>
+        <li><a href="https://3dscuba.com/calendar/register/6397b47e-fe40-417b-bc4c-415bac1f" target="_blank">FRTI</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Shop &amp; Travel</h4>
+      <ul>
+        <li><a href="https://3dscuba.com/products" target="_blank">All Products</a></li>
+        <li><a href="https://3dscuba.dive360.biz/trips" target="_blank">Dive Trips</a></li>
+        <li><a href="https://3dscuba.com/rentals" target="_blank">Rentals</a></li>
+        <li><a href="https://3dscuba.com/products/gift_certificate" target="_blank">Gift Certificates</a></li>
+        <li><a href="https://3dscuba.com/cart" target="_blank">Shopping Cart</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="https://3dscuba.com/our-team" target="_blank">Our Team</a></li>
+        <li><a href="https://3dscuba.com/blog/3d-scuba-blog" target="_blank">Blog</a></li>
+        <li><a href="https://3dscuba.com/contact-us" target="_blank">Contact Us</a></li>
+        <li><a href="https://3dscuba.com/signin" target="_blank">Sign In</a></li>
+        <li><a href="https://3dscuba.com/createAccount" target="_blank">Register</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>Â© 2026 3D Scuba. All rights reserved. | Charlotte, NC | Powered by <a href="https://diveshop360.com" target="_blank">DiveShop360</a></p>
+    <p style="font-size:12px;">
+      <a href="#">Privacy Policy</a> &nbsp;Â·&nbsp;
+      <a href="#">Terms of Service</a>
+    </p>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // Bubble generator
+  const bubblesEl = document.getElementById('bubbles');
+  for (let i = 0; i < 22; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 4 + Math.random() * 14;
+    b.style.cssText = `
+      left: ${Math.random() * 100}%;
+      width: ${size}px;
+      height: ${size}px;
+      animation-duration: ${5 + Math.random() * 10}s;
+      animation-delay: ${Math.random() * 8}s;
+      opacity: ${0.2 + Math.random() * 0.5};
+    `;
+    bubblesEl.appendChild(b);
+  }
+
+  // â”€â”€ SHARK SCROLL ANIMATION â”€â”€
+  const shark        = document.getElementById('shark');
+  const tripsSection = document.getElementById('trips');
+
+  const SHARK_W    = 280;
+  const BASE_SPEED = 1.8;   // always-on minimum swim speed (px/frame)
+
+  let sharkActive = false;
+  let sharkX      = -SHARK_W - 20;
+  let sharkY      = 0;
+  let sharkDir    = 1;       // 1 = right, -1 = left
+  let swimSpeed   = BASE_SPEED;
+  let bobT        = 0;
+  let rafId       = null;
+  let lastScrollY = window.scrollY;
+  let boostSpeed  = 0;
+
+  function positionShark() {
+    shark.style.left      = sharkX + 'px';
+    shark.style.top       = sharkY + 'px';
+    shark.style.transform = sharkDir === -1 ? 'scaleX(-1)' : 'scaleX(1)';
+  }
+
+  function swimFrame() {
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+
+    // Bob gently up and down
+    bobT += 0.03;
+    const bob = Math.sin(bobT) * 6;
+
+    // Decay boost, always keep base speed
+    boostSpeed *= 0.92;
+    swimSpeed   = BASE_SPEED + boostSpeed;
+
+    // Move horizontally
+    sharkX += swimSpeed * sharkDir;
+
+    // Flip at edges
+    if (sharkDir === 1 && sharkX > W + 20) {
+      sharkDir = -1;
+      sharkX   = W + 20;
+    } else if (sharkDir === -1 && sharkX < -SHARK_W - 20) {
+      sharkDir = 1;
+      sharkX   = -SHARK_W - 20;
+    }
+
+    shark.style.left      = sharkX + 'px';
+    shark.style.top       = (sharkY + bob) + 'px';
+    shark.style.transform = sharkDir === -1 ? 'scaleX(-1)' : 'scaleX(1)';
+
+    rafId = requestAnimationFrame(swimFrame);
+  }
+
+  function getTripsBottom() {
+    if (!tripsSection) return 99999;
+    return window.scrollY + tripsSection.getBoundingClientRect().bottom;
+  }
+
+  function startShark() {
+    if (sharkActive) return;
+    sharkActive = true;
+    sharkX      = -SHARK_W - 20;
+    sharkDir    = 1;
+    sharkY      = window.innerHeight * 0.5;
+    boostSpeed  = 4;
+    shark.classList.add('visible');
+    positionShark();
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(swimFrame);
+  }
+
+  function stopShark() {
+    if (!sharkActive) return;
+    sharkActive = false;
+    shark.classList.remove('visible');
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  window.addEventListener('scroll', () => {
+    const currentY    = window.scrollY;
+    const delta       = currentY - lastScrollY;
+    lastScrollY       = currentY;
+    const tripsBottom = getTripsBottom();
+    const pastTrips   = currentY + window.innerHeight * 0.4 > tripsBottom;
+
+    if (pastTrips) {
+      if (!sharkActive) startShark();
+      // Boost speed on scroll
+      boostSpeed = Math.min(18, boostSpeed + Math.abs(delta) * 0.8);
+      // Drift Y slightly with scroll direction
+      sharkY = Math.max(30, Math.min(window.innerHeight - 160, sharkY + delta * 0.15));
+    } else {
+      stopShark();
+    }
+  }, { passive: true });
+
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href').slice(1);
+      if (!id) return;
+      const el = document.getElementById(id);
+      if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+</script>
+</body>
+</html>
+

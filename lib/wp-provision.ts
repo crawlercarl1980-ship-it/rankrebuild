@@ -1,7 +1,19 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { put } from '@vercel/blob';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// Load the reference template once at module level
+function loadTemplate(): string {
+  try {
+    const templatePath = path.join(process.cwd(), 'lib', 'site-template.html');
+    return fs.readFileSync(templatePath, 'utf-8');
+  } catch {
+    return '';
+  }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -87,39 +99,40 @@ export async function generatePreviewSite(
     raw_html: '',
   };
 
-  // Collect content from all pages
   const allHeadings = scrapedPages.flatMap(p => p.headings).slice(0, 20);
   const allParagraphs = scrapedPages.flatMap(p => p.paragraphs).slice(0, 30);
   const allImages = scrapedPages.flatMap(p => p.images).filter(Boolean).slice(0, 15);
   const pageList = scrapedPages.map(p => p.title || p.url).filter(Boolean).slice(0, 10);
-  
-  // Step 1: Extract structured data from raw HTML using a fast, focused call
+
+  // Extract structured data from raw HTML
   const rawHtmlSample = scrapedPages
     .slice(0, 2)
     .map(p => p.raw_html?.substring(0, 10000) || '')
     .join('\n\n--- NEXT PAGE ---\n\n')
     .substring(0, 18000);
 
-  // Extract key business data first (fast, small output)
   let extractedData = '';
   if (rawHtmlSample.length > 100) {
     const extractMsg = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
+      max_tokens: 2000,
       messages: [{
         role: 'user',
-        content: `Extract key business info from this HTML. Return ONLY a JSON object with these fields (use null if not found):
+        content: `Extract ALL key business info from this HTML. Return ONLY a JSON object:
 {
   "phone": string,
   "email": string,
   "address": string,
   "hours": string,
   "tagline": string,
+  "deal": {"name": string, "price": string, "includes": string},
   "prices": [{"name": string, "price": string, "description": string}],
-  "services": [{"name": string, "description": string}],
+  "services": [{"name": string, "description": string, "image": string}],
   "images": ["url1", "url2"],
   "team": [{"name": string, "role": string}],
-  "social": {"instagram": string, "facebook": string}
+  "social": {"instagram": string, "facebook": string},
+  "certifications": [string],
+  "trips": [{"name": string, "destination": string}]
 }
 
 HTML:
@@ -132,17 +145,54 @@ ${rawHtmlSample.substring(0, 15000)}`
     }
   }
 
-  const prompt = `You are a world-class web designer building a $10,000 custom website. Create a complete, stunning, mobile-responsive single-page HTML website for "${businessName}".
+  // Load the reference template
+  const templateHtml = loadTemplate();
 
-BUSINESS DATA (use ALL of this — real content only, no placeholders):
+  const useTemplate = templateHtml.length > 1000;
+
+  const prompt = useTemplate
+    ? `You are adapting a premium website template for a new business. The template below was built for "3D Scuba" — a scuba diving center in Charlotte, NC. Your job is to adapt it for "${businessName}" by replacing ALL 3D Scuba-specific content with the new business's content while keeping the EXACT same design, CSS, layout, animations, and structure.
+
+NEW BUSINESS DATA:
+- Business name: ${businessName}
+- Title/tagline: ${primaryPage.title || businessName}
+- Description: ${primaryPage.meta_description || ''}
+- Pages: ${pageList.join(', ')}
+- Key headings: ${allHeadings.slice(0, 10).join(' | ')}
+- Content: ${allParagraphs.slice(0, 10).map(p => p.substring(0, 150)).join(' | ')}
+- Images to use: ${allImages.slice(0, 8).join(', ')}
+${extractedData ? `- Extracted data: ${extractedData}` : ''}
+
+ADAPTATION RULES:
+1. Keep ALL CSS exactly as-is — same colors, fonts, animations, layout
+2. Replace ALL text content (business name, tagline, services, courses, prices, contact info, testimonials, about text)
+3. Replace ALL images with the new business's images or relevant Unsplash photos
+4. Replace ALL links/hrefs with # or the new business's real links
+5. Update the page title, meta description
+6. Replace "3D Scuba", "scuba", "diving", "Charlotte, NC" with the new business's equivalents
+7. Adapt section names to fit the new business type (e.g. "Courses" → "Services" if not a diving business)
+8. Keep the preview banner: "✨ This is a preview of your new website — powered by RankRebuild"
+9. Remove the base64 logo — replace with the business name in Bebas Neue text
+10. Keep ALL JavaScript and animations exactly as-is
+
+TEMPLATE HTML TO ADAPT:
+${templateHtml}
+
+Return ONLY the complete adapted HTML. Start with <!DOCTYPE html>. No markdown fences, no explanation.`
+
+    : `You are a world-class web designer. Create a complete, stunning website for "${businessName}".
+
+BUSINESS DATA:
 - Business name: ${businessName}
 - Title: ${primaryPage.title || businessName}
 - Description: ${primaryPage.meta_description || ''}
 - Pages: ${pageList.join(', ')}
 - Headings: ${allHeadings.slice(0, 10).join(' | ')}
 - Content: ${allParagraphs.slice(0, 8).map(p => p.substring(0, 120)).join(' | ')}
-- Images (use as real src): ${allImages.slice(0, 8).join(', ')}
-${extractedData ? `- Extracted structured data: ${extractedData}` : ''}
+- Images: ${allImages.slice(0, 8).join(', ')}
+${extractedData ? `- Data: ${extractedData}` : ''}
+
+DESIGN: Dark navy (#051923), cyan (#00c8e0) accents, coral (#ff5c3a) CTAs. Bebas Neue headlines, Outfit body font. Glassmorphism cards, scroll animations, full responsive layout.
 
 EXACT DESIGN SYSTEM TO IMPLEMENT:
 CSS variables:
